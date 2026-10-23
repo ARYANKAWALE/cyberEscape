@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* Design tokens ported from the original :root variables */
+@theme {
+  --color-cyber-bg: #030914;
+  --color-cyber-panel: #071629;
+  --color-cyber-panel2: #081d34;
+  --color-cyber-cyan: #00d9ff;
+  --color-cyber-blue: #168bff;
+  --color-cyber-mint: #35f4d0;
+  --color-cyber-text: #e9f7ff;
+  --color-cyber-muted: #8db4d0;
+  --color-cyber-line: #125a83;
+  --color-cyber-red: #ff5e7a;
+  --color-cyber-green: #39f4b7;
+
+  --font-sans: Inter, "Segoe UI", Arial, sans-serif;
+  --font-mono: Consolas, Monaco, monospace;
+}
+
+@layer base {
+  body {
+    @apply m-0 min-h-screen overflow-x-hidden font-sans text-cyber-text;
+    background: radial-gradient(ellipse at 50% -20%, #0b3154 0%, #030914 55%);
+  }
+
+  /* Grid overlay */
+  body::before {
+    content: "";
+    @apply pointer-events-none fixed inset-0 opacity-[0.14];
+    background-image:
+      linear-gradient(rgba(0, 217, 255, 0.18) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 217, 255, 0.18) 1px, transparent 1px);
+    background-size: 38px 38px;
+    mask-image: linear-gradient(to bottom, black, transparent 88%);
+  }
+}
+
+@layer components {
+  /* Shared glass panel surface used by sidebar, panels and hero */
+  .surface {
+    @apply rounded-[14px] border border-cyber-line;
+    background: linear-gradient(145deg, #07182aee, #04101fee);
+    box-shadow:
+      0 12px 35px #0005,
+      inset 0 0 25px #0b6c9b0b;
+  }
+
+  .btn {
+    @apply cursor-pointer rounded-lg border border-cyber-cyan bg-[#00bce91a] px-[18px] py-[11px]
+      text-sm font-bold tracking-wider text-cyber-cyan transition duration-200
+      hover:-translate-y-px hover:bg-[#00d9ff2a] hover:shadow-[0_0_20px_#00d9ff25]
+      disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none;
+  }
+
+  .btn-primary {
+    @apply bg-cyber-cyan text-[#00121d] hover:bg-cyber-cyan;
+  }
+
+  .input-cyber {
+    @apply w-full min-w-0 rounded-lg border border-[#1c6389] bg-[#020b15] px-[14px] py-[13px]
+      text-[15px] text-cyber-text outline-none transition
+      placeholder:text-cyber-muted/60
+      focus:border-cyber-cyan focus:shadow-[0_0_0_3px_#00d9ff18];
+  }
+
+  .pill {
+    @apply rounded-full border border-[#168d7a] px-[9px] py-1.5 text-[10px] tracking-wider text-cyber-mint;
+  }
+
+  .eyebrow {
+    @apply text-[11px] tracking-[3px] text-cyber-mint;
+  }
+}
