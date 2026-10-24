@@ -1,7 +1,9 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import AdminRoute from './components/AdminRoute.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import PublicOnlyRoute from './components/PublicOnlyRoute.jsx'
 import { GameProvider } from './context/GameContext.jsx'
+import LeaderboardPage from './pages/LeaderboardPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import MissionPage from './pages/MissionPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
@@ -27,6 +29,9 @@ export default function App() {
         <Route element={<GameShell />}>
           <Route path="/" element={<WelcomePage />} />
           <Route path="/mission" element={<MissionPage />} />
+        </Route>
+        <Route path="/leaderboard" element={<AdminRoute />}>
+          <Route index element={<LeaderboardPage />} />
         </Route>
       </Route>
 

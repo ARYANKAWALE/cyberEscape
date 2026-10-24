@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TOTAL_LEVELS, levels } from '../data/levels.js'
+import { saveResult } from '../lib/api.js'
 import { formatElapsed } from '../lib/time.js'
 
 const MAX_LOG_LINES = 8
@@ -32,6 +33,13 @@ export function useEscapeRoom() {
    */
   const [elapsed, setElapsed] = useState(null)
   const [timerRunning, setTimerRunning] = useState(false)
+
+  /**
+   * Records per-level timing and solved status so the full session can be
+   * persisted to the backend once the player escapes.
+   * Shape: { [levelIndex]: { timeTakenSeconds: number|null } }
+   */
+  const [levelTimings, setLevelTimings] = useState({})
 
   const timerRef = useRef(null)
   useEffect(() => () => clearTimeout(timerRef.current), [])
@@ -94,13 +102,17 @@ export function useEscapeRoom() {
 
   /** Puzzle answer submit. */
   const submit = useCallback(
-    (rawAnswer) => {
+    (rawAnswer, user) => {
       const answer = rawAnswer.trim().toLowerCase()
       if (answer !== levels[current].answer.toLowerCase()) {
         setAnswerFeedback({ text: 'INCORRECT ANSWER — inspect the clue and try again.', kind: 'bad' })
         addLog(`Incorrect answer at Level ${current + 1}`)
         return false
       }
+
+      // Record this level's timing before clearing
+      const levelTime = elapsed
+      setLevelTimings((prev) => ({ ...prev, [current]: { timeTakenSeconds: levelTime } }))
 
       setCleared((prev) => new Set(prev).add(current))
       setTimerRunning(false) // freeze the stopwatch the moment the answer lands
@@ -114,6 +126,22 @@ export function useEscapeRoom() {
           setUnlocked(true)
           setView('success')
           addLog('MISSION COMPLETE // OPERATIVE ESCAPED')
+
+          // Persist completed session to backend
+          if (user) {
+            const allTimings = { ...levelTimings, [current]: { timeTakenSeconds: levelTime } }
+            const levelPayload = levels.map((lvl, idx) => ({
+              title: lvl.title,
+              solved: idx <= current,  // all previous + current are solved
+              timeTakenSeconds: allTimings[idx]?.timeTakenSeconds ?? null,
+            }))
+            saveResult({
+              userId: user.id,
+              userName: user.name,
+              completedAt: new Date().toISOString(),
+              levels: levelPayload,
+            }).catch((err) => console.warn('Could not save result to server:', err))
+          }
         }, 650)
       } else {
         const next = current + 1
@@ -124,7 +152,7 @@ export function useEscapeRoom() {
       }
       return true
     },
-    [addLog, current, elapsed, showGate],
+    [addLog, current, elapsed, levelTimings, showGate],
   )
 
   /** Sidebar level navigation. */
@@ -143,6 +171,7 @@ export function useEscapeRoom() {
   const reset = useCallback(() => {
     clearTimeout(timerRef.current)
     setCleared(new Set())
+    setLevelTimings({})
     setInitialized(false)
     setLog(INITIAL_LOG)
     showGate(0)

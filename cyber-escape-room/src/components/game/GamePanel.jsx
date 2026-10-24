@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { useAuth } from '../../context/AuthContext.jsx'
 import GateView from './GateView.jsx'
 import PuzzleView from './PuzzleView.jsx'
 import SuccessView from './SuccessView.jsx'
@@ -15,6 +16,7 @@ function panelMeta(view, levelNumber) {
 }
 
 const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
+  const { user } = useAuth()
   const {
     view,
     current,
@@ -56,6 +58,7 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
           elapsed={elapsed}
           timerRunning={timerRunning}
           onSubmit={submit}
+          user={user}
         />
       )}
 

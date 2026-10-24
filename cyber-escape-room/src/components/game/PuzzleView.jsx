@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Feedback from './Feedback.jsx'
 import Stopwatch from './Stopwatch.jsx'
 
-export default function PuzzleView({ levelIndex, level, feedback, elapsed, timerRunning, onSubmit }) {
+export default function PuzzleView({ levelIndex, level, feedback, elapsed, timerRunning, onSubmit, user }) {
   const [answer, setAnswer] = useState('')
   const inputRef = useRef(null)
 
@@ -13,7 +13,7 @@ export default function PuzzleView({ levelIndex, level, feedback, elapsed, timer
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit(answer)
+    onSubmit(answer, user)
   }
 
   return (

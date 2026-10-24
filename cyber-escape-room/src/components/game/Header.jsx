@@ -27,6 +27,16 @@ export default function Header({ status }) {
             OPERATIVE // {user?.name?.toUpperCase()}
           </small>
         </div>
+        {user?.isAdmin && (
+          <Link
+            to="/leaderboard"
+            id="leaderboardNavBtn"
+            className="btn px-2.5 py-2 text-[10px] whitespace-nowrap sm:px-3.5 sm:text-[11px] border-[#168d7a] text-[#35f4d0]"
+            title="View admin leaderboard"
+          >
+            ⬡ LEADERBOARD
+          </Link>
+        )}
         <button
           type="button"
           onClick={logout}

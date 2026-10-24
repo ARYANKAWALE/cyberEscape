@@ -10,6 +10,12 @@
 const USERS_KEY = 'cer.users'
 const SESSION_KEY = 'cer.session'
 
+// ── Hardcoded admin credentials ───────────────────────────────────────────────
+export const ADMIN_EMAIL    = 'admin@cyberescape.com'
+export const ADMIN_PASSWORD = 'Admin@1234'
+export const ADMIN_NAME     = 'Admin'
+
+
 function readJSON(key, fallback) {
   try {
     const raw = localStorage.getItem(key)
@@ -86,8 +92,31 @@ export async function verifyCredentials({ email, password }) {
 }
 
 export function toPublicUser(user) {
-  const { id, name, email, createdAt } = user
-  return { id, name, email, createdAt }
+  const { id, name, email, createdAt, isAdmin } = user
+  return { id, name, email, createdAt, isAdmin: Boolean(isAdmin) }
+}
+
+/**
+ * Seeds the hardcoded admin account into localStorage on first app load.
+ * Safe to call multiple times — no-op if admin already exists.
+ */
+export async function seedAdmin() {
+  const users = getUsers()
+  const normalized = normalizeEmail(ADMIN_EMAIL)
+  if (users.some((u) => u.email === normalized)) return // already seeded
+
+  const salt = randomSalt()
+  const passwordHash = await hashPassword(ADMIN_PASSWORD, salt)
+  const adminUser = {
+    id: crypto.randomUUID(),
+    name: ADMIN_NAME,
+    email: normalized,
+    salt,
+    passwordHash,
+    createdAt: new Date().toISOString(),
+    isAdmin: true,
+  }
+  writeJSON(USERS_KEY, [...users, adminUser])
 }
 
 export function getSession() {
