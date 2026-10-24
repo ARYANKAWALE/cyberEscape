@@ -37,7 +37,58 @@ export async function fetchResults() {
   return res.json()
 }
 
+/**
+ * GET /api/results/status/:userId — check if user has already submitted
+ */
+export async function checkUserSubmission(userId) {
+  if (!userId) return { submitted: false }
+  try {
+    const res = await fetch(`${BASE}/api/results/status/${encodeURIComponent(userId)}`)
+    if (!res.ok) return { submitted: false }
+    return res.json()
+  } catch {
+    return { submitted: false }
+  }
+}
+
 /** URL to trigger the Excel download — open in new tab or set window.location */
 export function getExportUrl() {
   return `${BASE}/api/results/export`
+}
+
+/**
+ * POST /api/users — register/sync an operative account to the backend.
+ */
+export async function registerUserApi(user) {
+  if (!user || !user.id) return
+  try {
+    await fetch(`${BASE}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      }),
+    })
+  } catch (err) {
+    console.warn('Could not sync user to backend:', err)
+  }
+}
+
+/**
+ * POST /api/users/sync — bulk sync all local users to backend.
+ */
+export async function syncUsersApi(users) {
+  if (!Array.isArray(users) || users.length === 0) return
+  try {
+    await fetch(`${BASE}/api/users/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ users }),
+    })
+  } catch (err) {
+    console.warn('Could not bulk sync users to backend:', err)
+  }
 }

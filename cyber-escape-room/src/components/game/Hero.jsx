@@ -1,14 +1,16 @@
-function startLabel({ finished, initialized }) {
-  if (finished) return 'VIEW RESULTS →'
-  if (initialized) return 'RESUME MISSION →'
-  return 'INITIALIZE MISSION →'
+import { CheckCircle2, FileText, Play } from 'lucide-react'
+
+function startLabel({ finished, initialized, submitted }) {
+  if (submitted || finished) return 'VIEW RESULTS'
+  if (initialized) return 'RESUME MISSION'
+  return 'INITIALIZE MISSION'
 }
 
 /**
  * Welcome banner shown only on the landing page. Greets the signed-in
  * participant and hands off to the questions page via `onStart`.
  */
-export default function Hero({ name, finished, initialized, onStart, onBrief }) {
+export default function Hero({ name, finished, initialized, submitted, onStart, onBrief }) {
   const firstName = name?.trim().split(/\s+/)[0] || 'Operative'
 
   return (
@@ -26,12 +28,12 @@ export default function Hero({ name, finished, initialized, onStart, onBrief }) 
         </p>
 
         <h2 className="m-0 mb-3.5 text-[clamp(28px,6vw,48px)] uppercase leading-[1.07] tracking-[1.2px] max-sm:tracking-[0.5px]">
-          {finished ? (
+          {submitted || finished ? (
             <>
               System{' '}
               <span className="text-cyber-cyan [text-shadow:0_0_20px_#00d9ff45]">unlocked.</span>
               <br />
-              You made it out.
+              Submission recorded.
             </>
           ) : (
             <>
@@ -43,17 +45,31 @@ export default function Hero({ name, finished, initialized, onStart, onBrief }) 
         </h2>
 
         <p className="mb-[22px] max-w-[580px] text-sm leading-relaxed text-[#b3d0e4] max-sm:text-[13px]">
-          {finished
-            ? 'All five security gates have been cleared. The cyber escape room is complete.'
-            : 'Five security gates stand between you and freedom. Initialize the mission to open the questions — then enter each access code, solve the challenge, and unlock the next layer of the system.'}
+          {submitted || finished
+            ? 'All five security levels have been cleared. 1 submission has been recorded for your ID.'
+            : 'Five security levels stand between you and freedom. Initialize the mission, enter the access code to breach Gate 1, and solve the challenges across all levels to escape.'}
         </p>
 
         <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-          <button type="button" className="btn btn-primary max-sm:w-full" onClick={onStart}>
-            {startLabel({ finished, initialized })}
+          <button
+            type="button"
+            className="btn btn-primary flex items-center justify-center gap-2 max-sm:w-full"
+            onClick={onStart}
+          >
+            {submitted || finished ? (
+              <CheckCircle2 className="size-4" />
+            ) : (
+              <Play className="size-4 fill-current" />
+            )}
+            <span>{startLabel({ finished, initialized, submitted })}</span>
           </button>
-          <button type="button" className="btn max-sm:w-full" onClick={onBrief}>
-            MISSION BRIEF
+          <button
+            type="button"
+            className="btn flex items-center justify-center gap-2 max-sm:w-full"
+            onClick={onBrief}
+          >
+            <FileText className="size-4 text-cyber-muted" />
+            <span>MISSION BRIEF</span>
           </button>
         </div>
       </div>

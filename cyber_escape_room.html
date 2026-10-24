@@ -75,19 +75,60 @@ const levels = [
  {code:'Hello', title:'Signal Intercept', question:'What comes once in a minute, twice in a moment, but never in a thousand years?', answer:'M', hint:'Think about the spelling of the words, not time itself.'},
  {code:'CLOCK', title:'Final Decryption', question:'EMAN EGELLOC', answer:'RAISONI', hint:'Reverse the message to reveal the clue. Enter the required final answer to escape.'}
 ];
-let current=0, unlocked=false, cleared=new Set(), initialized=false;
+let current=0, unlocked=false, cleared=new Set(), initialized=false, submitted=false;
 const $=id=>document.getElementById(id);
+const PROGRESS_KEY = 'cer_standalone_progress';
+
+function saveState(){
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+      current,
+      unlocked,
+      cleared: Array.from(cleared),
+      initialized,
+      submitted,
+      view: submitted || (cleared.size === levels.length) ? 'finish' : unlocked ? 'puzzle' : 'gate'
+    }));
+  } catch(e){}
+}
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    current = s.current || 0;
+    unlocked = Boolean(s.unlocked);
+    cleared = new Set(s.cleared || []);
+    initialized = Boolean(s.initialized);
+    submitted = Boolean(s.submitted);
+    if (submitted || s.view === 'finish') {
+      finish();
+      return true;
+    }
+    if (s.view === 'puzzle' && unlocked) {
+      showPuzzle();
+      return true;
+    }
+    if (initialized) {
+      showGate();
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+
 function log(message){const el=$('terminalLog');const line='> '+message;el.innerHTML=el.innerHTML+'\n'+line;const lines=el.innerHTML.split('\n');if(lines.length>8)el.innerHTML=lines.slice(-8).join('\n');}
-function buildNav(){ $('navList').innerHTML=''; levels.forEach((l,i)=>{const b=document.createElement('button');b.className='nav-level'+(i===current?' active':'')+(cleared.has(i)?' done':'');b.innerHTML=`<span class="num">${cleared.has(i)?'✓':String(i+1).padStart(2,'0')}</span><span><b>LEVEL ${i+1}</b><small>${cleared.has(i)?'CLEARED':i===current&&unlocked?'ACCESS GRANTED':'GATE LOCKED'}</small></span>`;b.addEventListener('click',()=>{if(i<=current){current=i;unlocked=false;showGate();buildNav();updateStats();log('Level '+(i+1)+' selected');}else{log('Access denied: clear current gate first');}});$('navList').appendChild(b);});}
+function buildNav(){ $('navList').innerHTML=''; levels.forEach((l,i)=>{const b=document.createElement('button');b.className='nav-level'+(i===current?' active':'')+(cleared.has(i)?' done':'');b.innerHTML=`<span class="num">${cleared.has(i)?'✓':String(i+1).padStart(2,'0')}</span><span><b>LEVEL ${i+1}</b><small>${cleared.has(i)?'CLEARED':i===current&&unlocked?'ACCESS GRANTED':'LOCKED'}</small></span>`;b.addEventListener('click',()=>{if(i<=current){current=i;if(i===0&&!unlocked){showGate();}else{showPuzzle();}buildNav();updateStats();log('Level '+(i+1)+' selected');}else{log('Access denied: clear current level first');}});$('navList').appendChild(b);});}
 function updateStats(){const n=cleared.size;$('clearedStat').textContent=n+' / 5';$('sideProgress').textContent=n+' / 5 CLEARED';$('currentStat').textContent=String(Math.min(current+1,5)).padStart(2,'0');$('progressBar').style.width=(n/5*100)+'%';$('progressCaption').textContent=Math.round(n/5*100)+'% SYSTEM BREACHED';$('securityStat').textContent=n===5?'ESCAPED':unlocked?'ACTIVE':'LOCKED';$('headerStatus').textContent=n===5?'ESCAPED':unlocked?'ACTIVE':'LOCKED';}
-function showGate(){ $('gateView').classList.remove('hidden');$('puzzleView').classList.add('hidden');$('successView').classList.add('hidden');$('panelTitle').textContent='ACCESS GATE // LEVEL '+(current+1);$('levelPill').textContent='AUTHENTICATION REQUIRED';$('accessInput').value='';$('gateFeedback').textContent='';$('gateFeedback').className='feedback';$('accessInput').placeholder='ENTER ACCESS CODE';$('accessBtn').textContent='UNLOCK LEVEL '+(current+1);}
-function showPuzzle(){unlocked=true;$('gateView').classList.add('hidden');$('puzzleView').classList.remove('hidden');$('successView').classList.add('hidden');const l=levels[current];$('panelTitle').textContent='CHALLENGE // LEVEL '+(current+1);$('levelPill').textContent='GATE ACTIVE';$('stageLabel').textContent='LEVEL '+String(current+1).padStart(2,'0')+' // '+l.title.toUpperCase();$('questionText').textContent=l.question;$('answerInput').value='';$('answerFeedback').textContent='';$('answerFeedback').className='feedback';$('answerInput').focus();buildNav();updateStats();log('Level '+(current+1)+' access granted; puzzle decrypted');}
-function access(){if(!initialized){initialized=true;log('Mission initialized');}const val=$('accessInput').value.trim();if(val.toLowerCase()===levels[current].code.toLowerCase()){showPuzzle();}else{$('gateFeedback').textContent='ACCESS DENIED — incorrect access code.';$('gateFeedback').className='feedback bad';log('Authentication failed at Level '+(current+1));}}
-function submit(){const val=$('answerInput').value.trim().toLowerCase();if(val===levels[current].answer.toLowerCase()){cleared.add(current);$('answerFeedback').textContent='CORRECT — challenge cleared.';$('answerFeedback').className='feedback good';log('Level '+(current+1)+' puzzle solved');updateStats();buildNav();if(current===levels.length-1){setTimeout(finish,650);}else{setTimeout(()=>{current++;unlocked=false;showGate();buildNav();updateStats();log('Next gate ready: Level '+(current+1));},700);}}else{$('answerFeedback').textContent='INCORRECT ANSWER — inspect the clue and try again.';$('answerFeedback').className='feedback bad';log('Incorrect answer at Level '+(current+1));}}
-function finish(){unlocked=true;$('gateView').classList.add('hidden');$('puzzleView').classList.add('hidden');$('successView').classList.remove('hidden');$('panelTitle').textContent='MISSION COMPLETE';$('levelPill').textContent='ESCAPE SUCCESSFUL';$('hero').querySelector('h2').innerHTML='System <span>unlocked.</span><br>You made it out.';$('hero').querySelector('p').textContent='All five security gates have been cleared. The cyber escape room is complete.';$('startBtn').classList.add('hidden');updateStats();buildNav();log('MISSION COMPLETE // OPERATIVE ESCAPED');}
-function reset(){current=0;unlocked=false;cleared=new Set();initialized=false;$('hero').querySelector('h2').innerHTML='Think fast.<br><span>Crack the code.</span>';$('hero').querySelector('p').textContent='Five security gates stand between you and freedom. Enter each access code, solve the challenge, and unlock the next layer of the system.';$('startBtn').classList.remove('hidden');$('terminalLog').innerHTML='&gt; Secure channel established\n&gt; Waiting for operative...\n<span class="dim">&gt; No access granted</span>';showGate();buildNav();updateStats();}
-$('accessBtn').addEventListener('click',access);$('accessInput').addEventListener('keydown',e=>{if(e.key==='Enter')access()});$('submitAnswer').addEventListener('click',submit);$('answerInput').addEventListener('keydown',e=>{if(e.key==='Enter')submit()});$('startBtn').addEventListener('click',()=>{$('accessInput').focus();$('gateFeedback').textContent='Mission initialized. Enter access code 0808.';$('gateFeedback').className='feedback good';initialized=true;log('Mission initialized; awaiting Level 1 credentials');$('gamePanel').scrollIntoView({behavior:'smooth',block:'center'});});$('rulesBtn').addEventListener('click',()=>{alert('MISSION BRIEF\n\n1. Enter the access code shown for each level.\n2. Solve the revealed puzzle.\n3. Correct answers unlock the next level.\n4. Clear all five levels to escape.\n\nTip: answers are checked without case sensitivity.');});$('replayBtn').addEventListener('click',reset);
-buildNav();showGate();updateStats();
+function showGate(){ $('gateView').classList.remove('hidden');$('puzzleView').classList.add('hidden');$('successView').classList.add('hidden');$('panelTitle').textContent='ACCESS GATE // LEVEL 1';$('levelPill').textContent='AUTHENTICATION REQUIRED';$('accessInput').value='';$('gateFeedback').textContent='';$('gateFeedback').className='feedback';$('accessInput').placeholder='ENTER ACCESS CODE (0808)';$('accessBtn').textContent='UNLOCK LEVEL 1';saveState();}
+function showPuzzle(){unlocked=true;$('gateView').classList.add('hidden');$('puzzleView').classList.remove('hidden');$('successView').classList.add('hidden');const l=levels[current];$('panelTitle').textContent='CHALLENGE // LEVEL '+(current+1);$('levelPill').textContent='GATE ACTIVE';$('stageLabel').textContent='LEVEL '+String(current+1).padStart(2,'0')+' // '+l.title.toUpperCase();$('questionText').textContent=l.question;$('answerInput').value='';$('answerFeedback').textContent='';$('answerFeedback').className='feedback';$('answerInput').focus();buildNav();updateStats();log('Level '+(current+1)+' access granted; puzzle decrypted');saveState();}
+function access(){if(!initialized){initialized=true;log('Mission initialized');}const val=$('accessInput').value.trim();if(val.toLowerCase()===(levels[0].code||'0808').toLowerCase()){showPuzzle();}else{$('gateFeedback').textContent='ACCESS DENIED — incorrect access code.';$('gateFeedback').className='feedback bad';log('Authentication failed at Level 1');}}
+function submit(){const val=$('answerInput').value.trim().toLowerCase();if(val===levels[current].answer.toLowerCase()){cleared.add(current);$('answerFeedback').textContent='CORRECT — challenge cleared.';$('answerFeedback').className='feedback good';log('Level '+(current+1)+' puzzle solved');updateStats();buildNav();saveState();if(current===levels.length-1){setTimeout(finish,650);}else{setTimeout(()=>{current++;showPuzzle();log('Next level ready: Level '+(current+1));},700);}}else{$('answerFeedback').textContent='INCORRECT ANSWER — inspect the clue and try again.';$('answerFeedback').className='feedback bad';log('Incorrect answer at Level '+(current+1));}}
+function finish(){unlocked=true;submitted=true;$('gateView').classList.add('hidden');$('puzzleView').classList.add('hidden');$('successView').classList.remove('hidden');$('panelTitle').textContent='MISSION COMPLETE';$('levelPill').textContent='ESCAPE SUCCESSFUL';$('hero').querySelector('h2').innerHTML='System <span>unlocked.</span><br>You made it out.';$('hero').querySelector('p').textContent='All five security levels have been cleared. 1 submission recorded.';$('startBtn').classList.add('hidden');if($('replayBtn')){$('replayBtn').textContent='SUBMISSION RECORDED';$('replayBtn').disabled=true;}updateStats();buildNav();log('MISSION COMPLETE // OPERATIVE ESCAPED');saveState();}
+function reset(){if(submitted){alert('Submission already recorded. Only 1 submission allowed.');return;}current=0;unlocked=false;cleared=new Set();initialized=false;localStorage.removeItem(PROGRESS_KEY);$('hero').querySelector('h2').innerHTML='Think fast.<br><span>Crack the code.</span>';$('hero').querySelector('p').textContent='Five security levels stand between you and freedom. Enter the access code, solve the challenges, and unlock each layer of the system.';$('startBtn').classList.remove('hidden');$('terminalLog').innerHTML='&gt; Secure channel established\n&gt; Waiting for operative...\n<span class="dim">&gt; No access granted</span>';showGate();buildNav();updateStats();}
+$('accessBtn').addEventListener('click',access);$('accessInput').addEventListener('keydown',e=>{if(e.key==='Enter')access()});$('submitAnswer').addEventListener('click',submit);$('answerInput').addEventListener('keydown',e=>{if(e.key==='Enter')submit()});$('startBtn').addEventListener('click',()=>{$('accessInput').focus();$('gateFeedback').textContent='Mission initialized. Enter access code 0808.';$('gateFeedback').className='feedback good';initialized=true;log('Mission initialized; awaiting Level 1 credentials');$('gamePanel').scrollIntoView({behavior:'smooth',block:'center'});showGate();});$('rulesBtn').addEventListener('click',()=>{alert('MISSION BRIEF\n\n1. Enter access code 0808 to breach Level 1.\n2. Solve the revealed puzzle.\n3. Correct answers unlock the next level automatically.\n4. Clear all five levels to escape.\n\nTip: answers are checked without case sensitivity.');});$('replayBtn').addEventListener('click',reset);
+if(!loadState()){buildNav();showGate();updateStats();}
 </script>
 </body>
 </html>

@@ -7,6 +7,8 @@
  * should be swapped for a real backend before any production use.
  */
 
+import { registerUserApi } from './api.js'
+
 const USERS_KEY = 'cer.users'
 const SESSION_KEY = 'cer.session'
 
@@ -80,6 +82,7 @@ export async function createUser({ name, email, password }) {
   }
 
   writeJSON(USERS_KEY, [...users, user])
+  registerUserApi(user).catch(() => {})
   return toPublicUser(user)
 }
 

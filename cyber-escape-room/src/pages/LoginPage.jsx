@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowRight, LogIn } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout.jsx'
 import FormField from '../components/auth/FormField.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -51,8 +52,12 @@ export default function LoginPage() {
       footer={
         <>
           New operative?{' '}
-          <Link to="/register" className="text-cyber-cyan underline-offset-4 hover:underline">
-            Register clearance →
+          <Link
+            to="/register"
+            className="inline-flex items-center gap-1 text-cyber-cyan underline-offset-4 hover:underline"
+          >
+            <span>Register clearance</span>
+            <ArrowRight className="size-3.5" />
           </Link>
         </>
       }
@@ -90,8 +95,13 @@ export default function LoginPage() {
           {formError}
         </div>
 
-        <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
-          {submitting ? 'VERIFYING…' : 'AUTHENTICATE →'}
+        <button
+          type="submit"
+          className="btn btn-primary flex w-full items-center justify-center gap-2"
+          disabled={submitting}
+        >
+          <LogIn className="size-4" />
+          <span>{submitting ? 'VERIFYING…' : 'AUTHENTICATE'}</span>
         </button>
       </form>
     </AuthLayout>

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Footer from '../components/game/Footer.jsx'
 import Header from '../components/game/Header.jsx'
@@ -12,6 +12,13 @@ export default function WelcomePage() {
   const game = useGame()
   const navigate = useNavigate()
   const [briefOpen, setBriefOpen] = useState(false)
+
+  // If operative has an active mission or already submitted, redirect to where they left off
+  useEffect(() => {
+    if (game.initialized || game.submitted || game.view === 'puzzle' || game.view === 'eliminated') {
+      navigate('/mission', { replace: true })
+    }
+  }, [game.initialized, game.submitted, game.view, navigate])
 
   const handleStart = useCallback(() => {
     game.start()
@@ -27,6 +34,7 @@ export default function WelcomePage() {
           name={user?.name}
           finished={game.finished}
           initialized={game.initialized}
+          submitted={game.submitted}
           onStart={handleStart}
           onBrief={() => setBriefOpen(true)}
         />

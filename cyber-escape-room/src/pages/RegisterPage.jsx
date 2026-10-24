@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, UserPlus } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout.jsx'
 import FormField from '../components/auth/FormField.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -41,7 +42,6 @@ export default function RegisterPage() {
     setSubmitting(true)
     try {
       await register({ name: form.name, email: form.email, password: form.password })
-      // register() also opens a session, so the user lands straight in the game.
       navigate('/', { replace: true })
     } catch (err) {
       setFormError(err.message)
@@ -58,8 +58,12 @@ export default function RegisterPage() {
       footer={
         <>
           Already cleared?{' '}
-          <Link to="/login" className="text-cyber-cyan underline-offset-4 hover:underline">
-            Sign in →
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-1 text-cyber-cyan underline-offset-4 hover:underline"
+          >
+            <span>Sign in</span>
+            <ArrowRight className="size-3.5" />
           </Link>
         </>
       }
@@ -120,8 +124,13 @@ export default function RegisterPage() {
           {formError}
         </div>
 
-        <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
-          {submitting ? 'ENROLLING…' : 'CREATE OPERATIVE →'}
+        <button
+          type="submit"
+          className="btn btn-primary flex w-full items-center justify-center gap-2"
+          disabled={submitting}
+        >
+          <UserPlus className="size-4" />
+          <span>{submitting ? 'ENROLLING…' : 'CREATE OPERATIVE'}</span>
         </button>
       </form>
     </AuthLayout>

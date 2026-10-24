@@ -4,7 +4,6 @@ import GamePanel from '../components/game/GamePanel.jsx'
 import Header from '../components/game/Header.jsx'
 import MissionData from '../components/game/MissionData.jsx'
 import Sidebar from '../components/game/Sidebar.jsx'
-import TerminalLog from '../components/game/TerminalLog.jsx'
 import { useGame } from '../context/GameContext.jsx'
 
 export default function MissionPage() {
@@ -42,7 +41,6 @@ export default function MissionPage() {
                 status={game.status}
                 progress={game.progress}
               />
-              <TerminalLog log={game.log} />
             </aside>
           </div>
         </main>

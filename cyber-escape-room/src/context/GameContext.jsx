@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react'
+import { useAuth } from './AuthContext.jsx'
 import { useEscapeRoom } from '../hooks/useEscapeRoom.js'
 
 const GameContext = createContext(null)
@@ -8,7 +9,8 @@ const GameContext = createContext(null)
  * between the welcome page (/) and the mission page (/mission).
  */
 export function GameProvider({ children }) {
-  const game = useEscapeRoom()
+  const { user } = useAuth()
+  const game = useEscapeRoom(user)
   return <GameContext.Provider value={game}>{children}</GameContext.Provider>
 }
 
