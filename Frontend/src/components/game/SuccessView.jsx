@@ -22,7 +22,7 @@ export default function SuccessView({ finalTime, onReplay, submitted }) {
           <span>// VERIFICATION ACCESS CODE</span>
         </div>
         <div className="mt-2.5 font-mono text-2xl font-bold tracking-[3px] text-[#35f4d0] sm:text-3xl [text-shadow:0_0_16px_#35f4d0aa]">
-          Your Code is
+          Your Code is 1595
         </div>
         <div className="mt-2 font-mono text-[11px] tracking-wider text-[#a4cfc6]">
           Use this code to unlock the Device
