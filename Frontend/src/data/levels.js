@@ -2,11 +2,11 @@
  * CyberEscape Room – Levels Configuration
  *
  * 5 Security Levels with new cryptic security puzzles:
- *   Level 1: The Encrypted Keyboard (3 min, Easy)
- *   Level 2: The Firewall Escape (4 min, Medium)
- *   Level 3: The Hacker's Identity (5 min, Medium)
- *   Level 4: The Central Server Password (6 min, Hard)
- *   Level 5: The Final Locker Breach (8 min, Expert)
+ *   Level 1: The Encrypted Keyboard (5 min, Easy)
+ *   Level 2: The Firewall Escape (6 min, Medium)
+ *   Level 3: The Hacker's Identity (7 min, Medium)
+ *   Level 4: The Central Server Password (8 min, Hard)
+ *   Level 5: The Final Locker Breach (10 min, Expert)
  */
 
 export const ACCESS_CODE_TIME_LIMIT = 300 // 5 minutes (300 seconds)
@@ -16,7 +16,7 @@ export const levels = [
     code: '0102',
     title: 'The Encrypted Keyboard',
     difficulty: 'Easy',
-    timeLimit: 180, // 3 min
+    timeLimit: 300, // 5 min (+2m)
     alert: 'SYSTEM ALERT: KEYBOARD PATTERN DETECTED',
     questions: [
       {
@@ -40,7 +40,7 @@ Enter the missing number to proceed.`,
   {
     title: 'The Firewall Escape',
     difficulty: 'Medium',
-    timeLimit: 240, // 4 min
+    timeLimit: 360, // 6 min (+2m)
     alert: 'SYSTEM ALERT: UNAUTHORIZED ACCESS DETECTED',
     questions: [
       {
@@ -62,7 +62,7 @@ Enter the number of minutes to unlock the next level.`,
   {
     title: "The Hacker's Identity",
     difficulty: 'Medium',
-    timeLimit: 300, // 5 min
+    timeLimit: 420, // 7 min (+2m)
     alert: 'CONFIDENTIAL FILE: IDENTITY UNKNOWN',
     questions: [
       {
@@ -86,7 +86,7 @@ Enter the age to identify the suspect.`,
   {
     title: 'The Central Server Password',
     difficulty: 'Hard',
-    timeLimit: 360, // 6 min
+    timeLimit: 480, // 8 min (+2m)
     alert: 'CRITICAL ALERT: CENTRAL SERVER LOCKED',
     questions: [
       {
@@ -113,7 +113,7 @@ Enter the password to restore server access.`,
   {
     title: 'The Final Locker Breach',
     difficulty: 'Expert',
-    timeLimit: 480, // 8 min
+    timeLimit: 600, // 10 min (+2m)
     timed: true,
     alert: 'FINAL ALERT: MASTER LOCKER ACTIVATED',
     questions: [
@@ -151,7 +151,7 @@ export const MISSION_BRIEF = [
   'Enter the access code  to breach the initial security gate.',
   'Each of the 5 levels contains 1 encrypted security challenge.',
   'Solve the challenge to clear the level and automatically advance.',
-  'Each level has a countdown timer: 3 → 4 → 5 → 6 → 8 minutes.',
+  'Each level has a countdown timer: 5 → 6 → 7 → 8 → 10 minutes.',
   'If the countdown hits 0:00 at any point during a level, you are ELIMINATED.',
   'Clear all 5 levels to escape.',
 ]
