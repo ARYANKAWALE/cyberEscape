@@ -10,7 +10,7 @@ import {
   Trophy,
 } from 'lucide-react'
 import { deleteUserApi, fetchResults, getExportUrl, syncUsersApi } from '../lib/api.js'
-import { getUsers, removeUser } from '../lib/authStorage.js'
+import { ADMIN_EMAIL, getUsers, removeUser } from '../lib/authStorage.js'
 import { formatElapsed } from '../lib/time.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useNavigate } from 'react-router-dom'
@@ -257,7 +257,7 @@ export default function LeaderboardPage() {
               const isOpen = expanded === s.id
               const targetId = s.userId || s.id
               const isDeleting = deletingId === targetId
-              const isRootAdmin = s.email === 'admin@cyberescape.com'
+              const isRootAdmin = s.email === ADMIN_EMAIL || s.email === 'admin1@gmail.com' || s.email === 'admin@cyberescape.com'
 
               return (
                 <div key={s.id} className="border-b border-[#16405d]/40 last:border-0">
