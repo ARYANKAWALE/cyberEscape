@@ -86,7 +86,7 @@ export default function RegisterPage() {
           type="text"
           name="email"
           autoComplete="email"
-          placeholder="team@email.com"
+          placeholder="team@gmail.com"
           value={form.email}
           onChange={update('email')}
           error={errors.email}
