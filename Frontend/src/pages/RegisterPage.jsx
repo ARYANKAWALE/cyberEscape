@@ -117,7 +117,7 @@ export default function RegisterPage() {
         </div>
 
         <div
-          className="min-h-[22px] text-xs leading-relaxed text-cyber-red"
+          className="min-h-[22px] text-sm leading-relaxed text-cyber-red"
           role="alert"
           aria-live="polite"
         >

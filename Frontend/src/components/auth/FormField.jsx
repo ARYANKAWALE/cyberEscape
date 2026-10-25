@@ -11,7 +11,7 @@ export default function FormField({ label, error, hint, className = '', type, ..
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-2 block text-[11px] tracking-[1.5px] text-[#a6cbe2]">
+      <label htmlFor={id} className="mb-2 block text-xs sm:text-sm font-semibold tracking-[1.5px] text-[#b3d9f0]">
         {label}
       </label>
       <div className="relative">
@@ -44,11 +44,11 @@ export default function FormField({ label, error, hint, className = '', type, ..
         )}
       </div>
       {error ? (
-        <p id={`${id}-error`} className="mb-0 mt-1.5 text-xs text-cyber-red">
+        <p id={`${id}-error`} className="mb-0 mt-1.5 text-sm text-cyber-red">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mb-0 mt-1.5 text-[11px] text-cyber-muted">
+        <p id={`${id}-hint`} className="mb-0 mt-1.5 text-xs sm:text-[13px] text-cyber-muted">
           {hint}
         </p>
       ) : null}

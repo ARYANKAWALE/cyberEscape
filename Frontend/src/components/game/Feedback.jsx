@@ -7,7 +7,7 @@ const KIND_CLASS = {
 export default function Feedback({ feedback }) {
   return (
     <div
-      className={`mt-3 min-h-[22px] text-xs leading-relaxed ${KIND_CLASS[feedback.kind] ?? KIND_CLASS['']}`}
+      className={`mt-3 min-h-[24px] text-sm sm:text-base font-semibold leading-relaxed ${KIND_CLASS[feedback.kind] ?? KIND_CLASS['']}`}
       aria-live="polite"
     >
       {feedback.text}

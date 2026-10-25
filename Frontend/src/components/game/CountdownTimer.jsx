@@ -56,10 +56,10 @@ export default function CountdownTimer({ countdown, timeLimit, running }) {
       role="timer"
       aria-live="polite"
       aria-label={`Time remaining: ${formatCountdown(countdown)}`}
-      className={`flex items-center gap-2.5 rounded-[7px] border px-3 py-1.5 font-mono text-base tracking-[3px] tabular-nums transition-colors duration-500 ${ringColor} ${textColor} ${glowColor}`}
+      className={`flex shrink-0 items-center gap-1.5 sm:gap-2 rounded-lg border px-2.5 py-1 sm:px-3 sm:py-1.5 font-mono text-sm sm:text-base tracking-[2px] tabular-nums transition-colors duration-500 ${ringColor} ${textColor} ${glowColor}`}
     >
       {/* SVG arc progress ring */}
-      <svg width="32" height="32" className="-rotate-90" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 32 32" className="-rotate-90 sm:w-7 sm:h-7" aria-hidden="true">
         {/* Background ring */}
         <circle
           cx="16" cy="16" r={radius}
@@ -82,10 +82,10 @@ export default function CountdownTimer({ countdown, timeLimit, running }) {
       </svg>
 
       {/* Pulse dot */}
-      <span aria-hidden="true" className={`h-2 w-2 rounded-full ${dotClass}`} />
+      <span aria-hidden="true" className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${dotClass}`} />
 
       {/* Time display */}
-      <span className={isDead ? 'animate-pulse' : ''}>{formatCountdown(countdown)}</span>
+      <span className={`font-bold ${isDead ? 'animate-pulse' : ''}`}>{formatCountdown(countdown)}</span>
     </div>
   )
 }

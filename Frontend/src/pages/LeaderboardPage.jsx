@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
   ArrowLeft,
+  Award,
   ChevronDown,
   ChevronUp,
+  Crown,
   Download,
   LogOut,
+  Medal,
   Trash2,
   Trophy,
 } from 'lucide-react'
@@ -63,6 +66,7 @@ export default function LeaderboardPage() {
   const [expanded, setExpanded] = useState(null) // session id being expanded
   const [deletingId, setDeletingId] = useState(null)
   const [actionError, setActionError] = useState(null)
+  const [showOnlyTop3, setShowOnlyTop3] = useState(true)
 
   useEffect(() => {
     // 1. Sync all registered local accounts to backend (excluding admin)
@@ -136,6 +140,42 @@ export default function LeaderboardPage() {
   const totalQuestionsSolved = sessions
     .flatMap((s) => s.levels || [])
     .filter((l) => l.solved).length
+
+  // Competitive esports ranking:
+  // 1. Completed teams (all 5 levels solved) first
+  // 2. Highest number of solved levels
+  // 3. Fastest total completion time (lowest seconds)
+  // 4. Earliest completion timestamp
+  const sortedSessions = useMemo(() => {
+    return [...sessions].sort((a, b) => {
+      const aSolved = (a.levels || []).filter((l) => l.solved).length
+      const bSolved = (b.levels || []).filter((l) => l.solved).length
+      const aComp = a.status === 'COMPLETE' || aSolved >= 5
+      const bComp = b.status === 'COMPLETE' || bSolved >= 5
+
+      if (aComp !== bComp) return aComp ? -1 : 1
+      if (aSolved !== bSolved) return bSolved - aSolved
+
+      const aTime = (a.levels || []).reduce(
+        (acc, l) => (l.timeTakenSeconds != null ? acc + l.timeTakenSeconds : acc),
+        0,
+      )
+      const bTime = (b.levels || []).reduce(
+        (acc, l) => (l.timeTakenSeconds != null ? acc + l.timeTakenSeconds : acc),
+        0,
+      )
+      if (aTime > 0 && bTime > 0 && aTime !== bTime) return aTime - bTime
+      if (aTime > 0 && bTime === 0) return -1
+      if (bTime > 0 && aTime === 0) return 1
+
+      const aDate = a.completedAt ? new Date(a.completedAt).getTime() : (a.updatedAt ? new Date(a.updatedAt).getTime() : 0)
+      const bDate = b.completedAt ? new Date(b.completedAt).getTime() : (b.updatedAt ? new Date(b.updatedAt).getTime() : 0)
+      return aDate - bDate
+    })
+  }, [sessions])
+
+  const top3 = useMemo(() => sortedSessions.slice(0, 3), [sortedSessions])
+  const displaySessions = showOnlyTop3 ? top3 : sortedSessions
 
   return (
     <div
@@ -239,17 +279,158 @@ export default function LeaderboardPage() {
 
         {!loading && !error && sessions.length > 0 && (
           <>
-            <div className="mb-2 flex items-center justify-between text-xs text-[#8baabe]">
-              <span className="font-mono text-[11px] text-[#35f4d0]">
-                {sessions.length} {sessions.length === 1 ? 'TEAM' : 'TEAMS'} RECORDED
-              </span>
-              <span className="font-mono text-[10px] text-cyber-muted md:hidden">
-                ⇄ Swipe to view all columns
-              </span>
+            {/* ── Top 3 Podium Showcase ── */}
+            {top3.length > 0 && (
+              <div className="mb-8">
+                <div className="mb-3.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-mono text-xs sm:text-sm tracking-[2px] text-[#35f4d0] font-bold">
+                    <Crown className="size-4 sm:size-5 text-amber-400" />
+                    <span>TOP 3 PODIUM // CURRENT STANDINGS</span>
+                  </div>
+                  <span className="hidden font-mono text-[11px] text-[#8baabe] sm:block">
+                    RANKED BY SOLVED LEVELS & FASTEST TIME
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {top3.map((s, idx) => {
+                    const solvedCount = (s.levels || []).filter((l) => l.solved).length
+                    const totalSeconds = (s.levels || []).reduce(
+                      (acc, l) => (l.timeTakenSeconds != null ? acc + l.timeTakenSeconds : acc),
+                      0,
+                    )
+                    const isComplete = s.status === 'COMPLETE' || solvedCount >= 5
+
+                    const placeConfigs = [
+                      {
+                        rank: '1ST PLACE',
+                        medal: '🥇',
+                        border: 'border-amber-400/70',
+                        bg: 'bg-gradient-to-b from-amber-500/15 via-[#0a1b2d] to-[#071322]',
+                        badgeBg: 'bg-amber-400/20 text-amber-300 border-amber-400/50',
+                        glow: 'shadow-[0_0_25px_#f59e0b20]',
+                        titleColor: 'text-amber-300',
+                        icon: <Crown className="size-5 text-amber-400" />,
+                      },
+                      {
+                        rank: '2ND PLACE',
+                        medal: '🥈',
+                        border: 'border-slate-300/60',
+                        bg: 'bg-gradient-to-b from-slate-400/10 via-[#0a1b2d] to-[#071322]',
+                        badgeBg: 'bg-slate-300/20 text-slate-200 border-slate-300/40',
+                        glow: 'shadow-[0_0_20px_#cbd5e115]',
+                        titleColor: 'text-slate-100',
+                        icon: <Medal className="size-5 text-slate-300" />,
+                      },
+                      {
+                        rank: '3RD PLACE',
+                        medal: '🥉',
+                        border: 'border-amber-700/60',
+                        bg: 'bg-gradient-to-b from-amber-700/10 via-[#0a1b2d] to-[#071322]',
+                        badgeBg: 'bg-amber-700/20 text-amber-400 border-amber-700/40',
+                        glow: 'shadow-[0_0_20px_#b4530915]',
+                        titleColor: 'text-amber-400',
+                        icon: <Award className="size-5 text-amber-500" />,
+                      },
+                    ]
+
+                    const cfg = placeConfigs[idx] || placeConfigs[2]
+
+                    return (
+                      <div
+                        key={s.id || s.userId}
+                        className={`relative overflow-hidden rounded-xl border ${cfg.border} ${cfg.bg} p-4 sm:p-5 ${cfg.glow} transition-all hover:scale-[1.01]`}
+                      >
+                        <div className="flex items-center justify-between border-b border-[#16405d]/40 pb-2.5">
+                          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[11px] font-bold tracking-wider ${cfg.badgeBg}`}>
+                            <span>{cfg.medal}</span>
+                            <span>{cfg.rank}</span>
+                          </span>
+                          {cfg.icon}
+                        </div>
+
+                        <div className="mt-3">
+                          <div className={`truncate font-mono text-base sm:text-lg font-bold ${cfg.titleColor}`} title={s.userName}>
+                            {s.userName || 'Team'}
+                          </div>
+                          {s.email && (
+                            <div className="truncate text-xs text-[#7bb0cb]">{s.email}</div>
+                          )}
+                        </div>
+
+                        <div className="mt-3.5 flex items-center justify-between border-t border-[#16405d]/40 pt-2.5 text-xs font-mono">
+                          <div>
+                            <span className="text-cyber-muted">LEVELS: </span>
+                            <span className="font-bold text-[#35f4d0]">{solvedCount} / 5</span>
+                          </div>
+                          <div>
+                            <span className="text-cyber-muted">TIME: </span>
+                            <span className="font-bold text-[#1de9b6]">
+                              {totalSeconds > 0 ? formatElapsed(totalSeconds) : '—'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-2 text-right">
+                          {isComplete ? (
+                            <span className="text-[10px] font-mono font-bold tracking-wider text-emerald-400">
+                              ● MISSION COMPLETED
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono tracking-wider text-amber-400">
+                              ○ IN PROGRESS
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Table Header Controls ── */}
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5 text-xs text-[#8baabe]">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs sm:text-sm font-semibold text-[#35f4d0]">
+                  {showOnlyTop3 ? `TOP 3 TEAMS (${displaySessions.length})` : `ALL REGISTERED TEAMS (${displaySessions.length})`}
+                </span>
+                {sessions.length > 3 && (
+                  <span className="font-mono text-[11px] text-[#5e8ca7]">
+                    ({sessions.length} total recorded)
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-lg border border-[#16405d] bg-[#091728] p-1 font-mono text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setShowOnlyTop3(true)}
+                  className={`rounded px-3 py-1 font-semibold transition-all ${
+                    showOnlyTop3
+                      ? 'bg-[#168d7a] text-white shadow-[0_0_10px_#168d7a88]'
+                      : 'text-[#8baabe] hover:text-white'
+                  }`}
+                >
+                  🏆 TOP 3 ONLY
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowOnlyTop3(false)}
+                  className={`rounded px-3 py-1 font-semibold transition-all ${
+                    !showOnlyTop3
+                      ? 'bg-[#168d7a] text-white shadow-[0_0_10px_#168d7a88]'
+                      : 'text-[#8baabe] hover:text-white'
+                  }`}
+                >
+                  ALL TEAMS ({sessions.length})
+                </button>
+              </div>
             </div>
+
             <div className="overflow-x-auto rounded-xl border border-[#16405d] shadow-lg">
             {/* Table header */}
-            <div className="grid min-w-[1000px] grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center border-b border-[#16405d] bg-[#0d1f30] px-5 py-3 font-mono text-[10px] tracking-[2px] text-[#35f4d0]">
+            <div className="grid min-w-[1000px] grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center border-b border-[#16405d] bg-[#0d1f30] px-5 py-3.5 font-mono text-xs tracking-[2px] text-[#35f4d0] font-semibold">
               <span>#</span>
               <span>TEAM ID</span>
               <span>TEAM NAME</span>
@@ -261,7 +442,7 @@ export default function LeaderboardPage() {
               <span />
             </div>
 
-            {sessions.map((s, i) => {
+            {displaySessions.map((s, i) => {
               const solvedCount = (s.levels || []).filter((l) => l.solved).length
               const totalLevels = s.levels?.length || 5
               const totalSeconds = (s.levels || []).reduce(
@@ -278,7 +459,7 @@ export default function LeaderboardPage() {
                 <div key={s.id} className="border-b border-[#16405d]/40 last:border-0">
                   {/* Row */}
                   <div
-                    className={`grid min-w-[1000px] cursor-pointer grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center px-5 py-3.5 transition-colors ${
+                    className={`grid min-w-[1000px] cursor-pointer grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center px-5 py-4 transition-colors ${
                       isOpen ? 'bg-[#0d2a22]/60' : 'hover:bg-[#0d1f30]/70'
                     }`}
                     onClick={() => toggleExpand(s.id)}
@@ -286,16 +467,32 @@ export default function LeaderboardPage() {
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && toggleExpand(s.id)}
                   >
-                    <span className="font-mono text-[13px] text-[#8baabe]">{i + 1}</span>
-                    <span className="truncate font-mono text-[11px] text-cyber-muted" title={s.userId}>
+                    <span className="font-mono text-sm font-semibold text-[#8baabe]">
+                      {i === 0 ? (
+                        <span className="inline-flex items-center gap-1 font-bold text-amber-300">
+                          🥇 1
+                        </span>
+                      ) : i === 1 ? (
+                        <span className="inline-flex items-center gap-1 font-bold text-slate-200">
+                          🥈 2
+                        </span>
+                      ) : i === 2 ? (
+                        <span className="inline-flex items-center gap-1 font-bold text-amber-500">
+                          🥉 3
+                        </span>
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    <span className="truncate font-mono text-xs text-cyber-muted" title={s.userId}>
                       {s.userId || '—'}
                     </span>
                     <div className="min-w-0 pr-2">
-                      <div className="truncate font-mono text-[13px] font-semibold text-[#35f4d0]">
+                      <div className="truncate font-mono text-[15px] font-bold text-[#35f4d0]">
                         {s.userName || 'Team'}
                       </div>
                       {s.email && (
-                        <div className="truncate text-[10px] text-[#5e8ca7]">{s.email}</div>
+                        <div className="truncate text-xs text-[#7bb0cb]">{s.email}</div>
                       )}
                     </div>
                     <div>
@@ -305,16 +502,16 @@ export default function LeaderboardPage() {
                         <Badge kind="bad">INCOMPLETE</Badge>
                       )}
                     </div>
-                    <div className="font-mono text-[12px]">
-                      <span className={solvedCount > 0 ? 'text-[#35f4d0]' : 'text-cyber-muted'}>
+                    <div className="font-mono text-sm">
+                      <span className={solvedCount > 0 ? 'text-[#35f4d0] font-bold' : 'text-cyber-muted'}>
                         {solvedCount}
                       </span>{' '}
                       / {totalLevels}
                     </div>
-                    <span className="font-mono text-[13px] font-semibold text-[#1de9b6]">
+                    <span className="font-mono text-sm font-bold text-[#1de9b6]">
                       {hasAnyTime ? formatElapsed(totalSeconds) : '—'}
                     </span>
-                    <span className="font-mono text-[11px] text-[#8baabe]">
+                    <span className="font-mono text-xs text-[#a2c2d6]">
                       {formatDate(s.completedAt || s.updatedAt)}
                     </span>
 

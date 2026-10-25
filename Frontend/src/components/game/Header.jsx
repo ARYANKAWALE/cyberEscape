@@ -12,19 +12,19 @@ export default function Header({ status }) {
           <Shield className="size-5 sm:size-6 text-cyber-cyan" />
         </div>
         <div className="min-w-0">
-          <h1 className="m-0 text-[15px] uppercase leading-tight tracking-[1.2px] sm:text-[clamp(18px,2.6vw,27px)] sm:tracking-[3px]">
+          <h1 className="m-0 text-[16px] uppercase leading-tight tracking-[1.2px] sm:text-[clamp(19px,2.6vw,28px)] sm:tracking-[3px]">
             Cyber <span className="text-cyber-cyan">Escape Room</span>
           </h1>
-          <div className="mt-1 hidden text-[10px] tracking-[3px] text-cyber-muted sm:block">
+          <div className="mt-1 hidden text-xs tracking-[3px] text-cyber-muted sm:block">
             THINK / DECODE / ESCAPE
           </div>
         </div>
       </Link>
 
       <div className="flex shrink-0 items-center gap-3 sm:gap-5">
-        <div className="hidden text-right text-xs tracking-[2px] text-cyber-mint sm:block">
+        <div className="hidden text-right text-xs sm:text-sm tracking-[2px] text-cyber-mint sm:block">
           SYSTEM STATUS: <span>{status}</span>
-          <small className="mt-1 block text-[10px] text-cyber-muted">
+          <small className="mt-1 block text-xs text-cyber-muted">
             TEAM // {user?.name?.toUpperCase()}
           </small>
         </div>
@@ -32,20 +32,20 @@ export default function Header({ status }) {
           <Link
             to="/admin"
             id="adminNavBtn"
-            className="btn flex items-center gap-1.5 px-2.5 py-2 text-[10px] whitespace-nowrap sm:px-3.5 sm:text-[11px] border-[#168d7a] text-[#35f4d0]"
+            className="btn flex items-center gap-1.5 px-3 py-2 text-xs whitespace-nowrap sm:px-4 sm:text-sm border-[#168d7a] text-[#35f4d0]"
             title="View admin dashboard"
           >
-            <Trophy className="size-3.5 text-[#35f4d0]" />
+            <Trophy className="size-4 text-[#35f4d0]" />
             ADMIN
           </Link>
         )}
         <button
           type="button"
           onClick={logout}
-          className="btn flex items-center gap-1.5 px-2.5 py-2 text-[10px] whitespace-nowrap sm:px-3.5 sm:text-[11px]"
+          className="btn flex items-center gap-1.5 px-3 py-2 text-xs whitespace-nowrap sm:px-4 sm:text-sm"
           title={`Sign out ${user?.email ?? ''}`}
         >
-          <LogOut className="size-3.5 text-cyber-muted" />
+          <LogOut className="size-4 text-cyber-muted" />
           LOG OUT
         </button>
       </div>

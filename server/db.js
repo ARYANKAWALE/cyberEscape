@@ -244,15 +244,31 @@ async function getAllSessions() {
     }
   }
 
-  // Sort: COMPLETE first, then by updatedAt DESC
+  // Sort: COMPLETE first, then by solved count DESC, then fastest time ASC, then date
   results.sort((a, b) => {
-    const aComp = a.status === 'COMPLETE' ? 0 : 1
-    const bComp = b.status === 'COMPLETE' ? 0 : 1
-    if (aComp !== bComp) return aComp - bComp
+    const aSolved = (a.levels || []).filter((l) => l.solved).length
+    const bSolved = (b.levels || []).filter((l) => l.solved).length
+    const aComp = a.status === 'COMPLETE' || aSolved >= 5
+    const bComp = b.status === 'COMPLETE' || bSolved >= 5
 
-    const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
-    const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
-    return bTime - aTime
+    if (aComp !== bComp) return aComp ? -1 : 1
+    if (aSolved !== bSolved) return bSolved - aSolved
+
+    const aTime = (a.levels || []).reduce(
+      (acc, l) => (l.timeTakenSeconds != null ? acc + l.timeTakenSeconds : acc),
+      0,
+    )
+    const bTime = (b.levels || []).reduce(
+      (acc, l) => (l.timeTakenSeconds != null ? acc + l.timeTakenSeconds : acc),
+      0,
+    )
+    if (aTime > 0 && bTime > 0 && aTime !== bTime) return aTime - bTime
+    if (aTime > 0 && bTime === 0) return -1
+    if (bTime > 0 && aTime === 0) return 1
+
+    const aDate = a.completedAt ? new Date(a.completedAt).getTime() : (a.updatedAt ? new Date(a.updatedAt).getTime() : 0)
+    const bDate = b.completedAt ? new Date(b.completedAt).getTime() : (b.updatedAt ? new Date(b.updatedAt).getTime() : 0)
+    return aDate - bDate
   })
 
   return results

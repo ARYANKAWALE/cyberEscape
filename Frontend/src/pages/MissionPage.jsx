@@ -21,7 +21,7 @@ export default function MissionPage() {
     <>
       <Header status={game.status} />
 
-      <div className="relative z-[1] mx-auto grid max-w-[1400px] grid-cols-1 gap-5 px-[clamp(14px,3vw,38px)] pb-[38px] pt-[26px] max-sm:pt-[15px] lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="relative z-[1] mx-auto grid max-w-[1400px] grid-cols-1 gap-4 sm:gap-5 px-3 sm:px-[clamp(14px,3vw,38px)] pb-[38px] pt-3.5 sm:pt-[26px] lg:grid-cols-[240px_minmax(0,1fr)]">
         <Sidebar
           current={game.current}
           unlocked={game.unlocked}

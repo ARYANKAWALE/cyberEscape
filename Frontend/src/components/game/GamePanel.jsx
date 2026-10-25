@@ -10,15 +10,15 @@ function panelMeta(view, levelNumber) {
   switch (view) {
     case 'puzzle':
       return {
-        title: `CHALLENGE // LEVEL ${levelNumber}`,
-        pill: 'CHALLENGE ACTIVE',
+        title: `LEVEL ${levelNumber} // CHALLENGE`,
+        pill: 'ACTIVE',
       }
     case 'success':
-      return { title: 'MISSION COMPLETE', pill: 'ESCAPE SUCCESSFUL' }
+      return { title: 'MISSION COMPLETE', pill: 'CLEARED' }
     case 'eliminated':
-      return { title: 'TEAM ELIMINATED', pill: 'MISSION FAILED' }
+      return { title: 'TEAM ELIMINATED', pill: 'FAILED' }
     default:
-      return { title: `ACCESS GATE // LEVEL ${levelNumber}`, pill: 'AUTHENTICATION REQUIRED' }
+      return { title: `LEVEL ${levelNumber} // ACCESS GATE`, pill: 'AUTH REQUIRED' }
   }
 }
 
@@ -50,12 +50,14 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
       : 'pill'
 
   return (
-    <section ref={ref} className="surface p-[22px] max-sm:p-[17px]">
-      <div className="mb-5 flex items-center justify-between gap-2.5 border-b border-[#16405d] pb-[15px]">
-        <h3 className={`m-0 text-[15px] tracking-[1.5px] ${view === 'eliminated' ? 'text-red-400' : ''}`}>
+    <section ref={ref} className="surface p-4 sm:p-5 md:p-6">
+      <div className="mb-4 flex items-center justify-between gap-2 border-b border-[#16405d] pb-3">
+        <h2 className={`m-0 text-sm sm:text-base font-bold tracking-[1.5px] truncate ${view === 'eliminated' ? 'text-red-400' : ''}`}>
           {title}
-        </h3>
-        <span className={pillClass}>{pill}</span>
+        </h2>
+        <span className={`${pillClass} shrink-0 text-[11px] sm:text-xs px-2.5 py-0.5 sm:px-3 sm:py-1 font-semibold`}>
+          {pill}
+        </span>
       </div>
 
       {view === 'gate' && (

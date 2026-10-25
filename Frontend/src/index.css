@@ -69,8 +69,8 @@
   }
 
   .btn {
-    @apply cursor-pointer rounded-lg border border-cyber-cyan bg-[#00bce91a] px-[16px] py-[10px]
-      text-sm font-bold tracking-wider text-cyber-cyan transition-all duration-200 ease-out
+    @apply cursor-pointer rounded-lg border border-cyber-cyan bg-[#00bce91a] px-[18px] py-[11px]
+      text-sm sm:text-base font-bold tracking-wider text-cyber-cyan transition-all duration-200 ease-out
       hover:-translate-y-0.5 hover:bg-[#00d9ff2a] hover:shadow-[0_0_20px_#00d9ff30]
       active:translate-y-0 active:scale-[0.98]
       disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none;
@@ -81,17 +81,17 @@
   }
 
   .input-cyber {
-    @apply w-full min-w-0 rounded-lg border border-[#1c6389] bg-[#020b15] px-[14px] py-[12px]
-      text-[15px] text-cyber-text outline-none transition-all duration-200
+    @apply w-full min-w-0 rounded-lg border border-[#1c6389] bg-[#020b15] px-[16px] py-[13px]
+      text-base text-cyber-text outline-none transition-all duration-200
       placeholder:text-cyber-muted/60
       focus:border-cyber-cyan focus:shadow-[0_0_0_3px_#00d9ff25];
   }
 
   .pill {
-    @apply rounded-full border border-[#168d7a] px-[9px] py-1 text-[10px] tracking-wider text-cyber-mint transition-colors;
+    @apply rounded-full border border-[#168d7a] px-3 py-1 text-xs font-medium tracking-wider text-cyber-mint transition-colors;
   }
 
   .eyebrow {
-    @apply text-[11px] tracking-[3px] text-cyber-mint;
+    @apply text-xs sm:text-sm font-medium tracking-[2.5px] text-cyber-mint;
   }
 }

@@ -312,7 +312,7 @@ export function useEscapeRoom(user) {
           activeQ.acceptedAnswers.map((a) => a.toLowerCase()).includes(answer))
 
       if (!isCorrect) {
-        setAnswerFeedback({ text: 'INCORRECT ANSWER — inspect the clue and try again.', kind: 'bad' })
+        setAnswerFeedback({ text: 'INCORRECT ANSWER — try again.', kind: 'bad' })
         addLog(`Incorrect answer at Level ${current + 1}`)
         return false
       }

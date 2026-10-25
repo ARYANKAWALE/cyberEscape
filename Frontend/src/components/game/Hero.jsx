@@ -22,7 +22,7 @@ export default function Hero({ name, finished, initialized, submitted, onStart, 
           // WELCOME TO THE CYBER ESCAPE ROOM
         </div>
 
-        <p className="mb-3 text-[clamp(15px,2vw,18px)] leading-relaxed text-cyber-text">
+        <p className="mb-3 text-[clamp(17px,2.2vw,21px)] leading-relaxed text-cyber-text">
           Hello, <span className="font-bold text-cyber-mint">{teamName}</span> — welcome, and thank
           you for joining this CYBER ESCAPE ROOM.
         </p>
@@ -44,7 +44,7 @@ export default function Hero({ name, finished, initialized, submitted, onStart, 
           )}
         </h2>
 
-        <p className="mb-[22px] max-w-[580px] text-sm leading-relaxed text-[#b3d0e4] max-sm:text-[13px]">
+        <p className="mb-[24px] max-w-[620px] text-base sm:text-lg leading-relaxed text-[#b3d0e4]">
           {submitted || finished
             ? 'All five security levels have been cleared. 1 submission has been recorded for your ID.'
             : 'Five security levels stand between you and freedom. Initialize the mission, enter the access code to breach Gate 1, and solve the challenges across all levels to escape.'}
