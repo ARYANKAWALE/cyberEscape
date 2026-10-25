@@ -21,7 +21,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: 'http://localhost:5173' })) // Vite dev server
+app.use(cors({ origin: /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/ })) // any localhost port (Vite dev)
 app.use(express.json())
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -144,6 +144,26 @@ app.get('/api/results/status/:userId', (req, res) => {
   } catch (err) {
     console.error('Error checking user submission status:', err)
     res.status(500).json({ error: 'Failed to check submission status.' })
+  }
+})
+
+/**
+ * DELETE /api/users/:userId
+ * Permanently removes a user, their session, and all level results.
+ */
+app.delete('/api/users/:userId', (req, res) => {
+  const { userId } = req.params
+  if (!userId) return res.status(400).json({ error: 'Missing userId.' })
+
+  try {
+    db.deleteUser(userId)
+    syncExcelFile(db.getAllSessions()).catch((e) =>
+      console.warn('Could not auto-sync Excel after delete:', e),
+    )
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Error deleting user:', err)
+    res.status(500).json({ error: 'Failed to delete user.' })
   }
 })
 

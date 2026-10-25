@@ -92,3 +92,17 @@ export async function syncUsersApi(users) {
     console.warn('Could not bulk sync users to backend:', err)
   }
 }
+
+/**
+ * DELETE /api/users/:userId — permanently remove a user and all their data.
+ */
+export async function deleteUserApi(userId) {
+  const res = await fetch(`${BASE}/api/users/${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to delete user.')
+  }
+  return res.json()
+}

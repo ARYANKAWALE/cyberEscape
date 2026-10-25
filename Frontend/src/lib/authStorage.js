@@ -57,6 +57,12 @@ export function getUsers() {
   return readJSON(USERS_KEY, [])
 }
 
+export function removeUser(userId) {
+  if (!userId) return
+  const users = getUsers().filter((u) => u.id !== userId)
+  writeJSON(USERS_KEY, users)
+}
+
 export function findUserByEmail(email) {
   const target = normalizeEmail(email)
   return getUsers().find((u) => u.email === target) ?? null

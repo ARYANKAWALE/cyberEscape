@@ -82,17 +82,12 @@ async function buildWorkbook(sessions) {
     { header: 'Operative ID',       key: 'userId',       width: 22 },
     { header: 'Player',             key: 'player',       width: 18 },
     { header: 'Status',             key: 'status',       width: 14 },
-    { header: 'Solved',             key: 'levelsSolved', width: 10 },
-    { header: 'L1.Q1\nSequence',    key: 'l1q1',         width: 13 },
-    { header: 'L1.Q2\nBinary',      key: 'l1q2',         width: 13 },
-    { header: 'L2.Q1\nCaesar',      key: 'l2q1',         width: 13 },
-    { header: 'L2.Q2\nAtbash',      key: 'l2q2',         width: 13 },
-    { header: 'L3.Q1\nLeapSeq',     key: 'l3q1',         width: 13 },
-    { header: 'L3.Q2\nVowel',       key: 'l3q2',         width: 13 },
-    { header: 'L4.Q1\nSignal',      key: 'l4q1',         width: 13 },
-    { header: 'L4.Q2\nHardware',    key: 'l4q2',         width: 13 },
-    { header: 'L5.Q1\nReverse',     key: 'l5q1',         width: 13 },
-    { header: 'L5.Q2\nBase64',      key: 'l5q2',         width: 13 },
+    { header: 'Solved',             key: 'levelsSolved', width: 12 },
+    { header: 'Level 1\nSequence',  key: 'l1',           width: 15 },
+    { header: 'Level 2\nCaesar',    key: 'l2',           width: 15 },
+    { header: 'Level 3\nLeapSeq',   key: 'l3',           width: 15 },
+    { header: 'Level 4\nSignal',    key: 'l4',           width: 15 },
+    { header: 'Level 5\nReverse',   key: 'l5',           width: 15 },
     { header: 'TOTAL SOLVING\nTIME',key: 'totalTime',    width: 16 },
     { header: 'Completed / Updated',key: 'timestamp',    width: 22 },
   ]
@@ -103,11 +98,11 @@ async function buildWorkbook(sessions) {
 
   sessions.forEach((s, i) => {
     const solvedCount = (s.levels || []).filter((l) => l.solved).length
-    const totalLevels = s.levels?.length || 10
+    const totalLevels = s.levels?.length || 5
 
-    // Extract time taken by index for up to 10 questions
+    // Extract time taken by index for up to 5 levels
     const qTimes = []
-    for (let idx = 0; idx < 10; idx++) {
+    for (let idx = 0; idx < 5; idx++) {
       qTimes.push(s.levels?.[idx]?.timeTakenSeconds)
     }
 
@@ -128,16 +123,11 @@ async function buildWorkbook(sessions) {
       player: s.userName || 'Operative',
       status: statusText,
       levelsSolved: `${solvedCount} / ${totalLevels}`,
-      l1q1: formatTime(qTimes[0]),
-      l1q2: formatTime(qTimes[1]),
-      l2q1: formatTime(qTimes[2]),
-      l2q2: formatTime(qTimes[3]),
-      l3q1: formatTime(qTimes[4]),
-      l3q2: formatTime(qTimes[5]),
-      l4q1: formatTime(qTimes[6]),
-      l4q2: formatTime(qTimes[7]),
-      l5q1: formatTime(qTimes[8]),
-      l5q2: formatTime(qTimes[9]),
+      l1: formatTime(qTimes[0]),
+      l2: formatTime(qTimes[1]),
+      l3: formatTime(qTimes[2]),
+      l4: formatTime(qTimes[3]),
+      l5: formatTime(qTimes[4]),
       totalTime: hasAnyTime ? formatTime(totalSeconds) : '—',
       timestamp: dateStr,
     })
@@ -145,7 +135,7 @@ async function buildWorkbook(sessions) {
 
     row.eachCell((cell, colNum) => {
       const isPlayer = colNum === 3
-      const isTotal = colNum === 16
+      const isTotal = colNum === 11
       const isStatus = colNum === 4
 
       applyDataStyle(cell, i, isPlayer || isTotal)

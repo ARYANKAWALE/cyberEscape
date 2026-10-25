@@ -7,11 +7,12 @@ import {
   Clock,
   Download,
   LogOut,
+  Trash2,
   Trophy,
   UserCheck,
 } from 'lucide-react'
-import { fetchResults, getExportUrl, syncUsersApi } from '../lib/api.js'
-import { getUsers } from '../lib/authStorage.js'
+import { deleteUserApi, fetchResults, getExportUrl, syncUsersApi } from '../lib/api.js'
+import { getUsers, removeUser } from '../lib/authStorage.js'
 import { formatElapsed } from '../lib/time.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useNavigate } from 'react-router-dom'
@@ -62,20 +63,20 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState(null) // session id being expanded
+  const [deletingId, setDeletingId] = useState(null)
+  const [actionError, setActionError] = useState(null)
 
   useEffect(() => {
     // 1. Sync all registered local accounts to backend so every user ID appears
     const localUsers = getUsers()
     const syncPromise =
       Array.isArray(localUsers) && localUsers.length > 0
-        ? syncUsersApi(localUsers)
+        ? syncUsersApi(localUsers.map(({ id, name, email, createdAt }) => ({ id, name, email, createdAt })))
         : Promise.resolve()
 
     syncPromise
-      .finally(() => {
-        return fetchResults()
-      })
-      .then(setSessions)
+      .then(() => fetchResults())
+      .then((data) => setSessions(Array.isArray(data) ? data : []))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
@@ -86,6 +87,41 @@ export default function LeaderboardPage() {
 
   function toggleExpand(id) {
     setExpanded((prev) => (prev === id ? null : id))
+  }
+
+  async function handleDeleteUser(e, s) {
+    e.stopPropagation()
+    const targetId = s.userId || s.id
+    const displayName = s.userName || s.email || targetId
+
+    if (
+      !window.confirm(
+        `Are you sure you want to permanently delete operative "${displayName}"?\n\nThis will remove their account and all game progress from the database and leaderboard.`,
+      )
+    ) {
+      return
+    }
+
+    setDeletingId(targetId)
+    setActionError(null)
+
+    try {
+      // 1. Delete from SQLite server database
+      await deleteUserApi(targetId)
+      // 2. Delete from localStorage so it does not re-sync on refresh
+      removeUser(targetId)
+      if (s.userId && s.userId !== targetId) removeUser(s.userId)
+      if (s.id && s.id !== targetId) removeUser(s.id)
+      // 3. Remove from UI state
+      setSessions((prev) =>
+        prev.filter((item) => item.userId !== targetId && item.id !== targetId),
+      )
+    } catch (err) {
+      console.error('Failed to delete user:', err)
+      setActionError(`Failed to delete operative: ${err.message}`)
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const completedCount = sessions.filter(
@@ -183,6 +219,13 @@ export default function LeaderboardPage() {
           </div>
         )}
 
+        {actionError && (
+          <div className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-red-800 bg-red-950/40 p-3 text-center font-mono text-xs text-red-400">
+            <AlertTriangle className="size-4 shrink-0 text-red-400" />
+            <span>{actionError}</span>
+          </div>
+        )}
+
         {!loading && !error && sessions.length === 0 && (
           <div className="rounded-lg border border-[#16405d] bg-[#0a1628]/60 p-10 text-center font-mono text-[#8baabe]">
             No operatives registered yet. Accounts will appear here automatically upon registration.
@@ -192,20 +235,21 @@ export default function LeaderboardPage() {
         {!loading && !error && sessions.length > 0 && (
           <div className="overflow-x-auto rounded-xl border border-[#16405d]">
             {/* Table header */}
-            <div className="grid min-w-[960px] grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_140px_2.5rem] items-center border-b border-[#16405d] bg-[#0d1f30] px-5 py-3 font-mono text-[10px] tracking-[2px] text-[#35f4d0]">
+            <div className="grid min-w-[1000px] grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center border-b border-[#16405d] bg-[#0d1f30] px-5 py-3 font-mono text-[10px] tracking-[2px] text-[#35f4d0]">
               <span>#</span>
               <span>OPERATIVE ID</span>
               <span>PLAYER</span>
               <span>STATUS</span>
-              <span>QUESTIONS</span>
+              <span>LEVELS</span>
               <span>TOTAL TIME</span>
               <span>LAST ACTIVE</span>
+              <span className="text-center">ACTION</span>
               <span />
             </div>
 
             {sessions.map((s, i) => {
               const solvedCount = (s.levels || []).filter((l) => l.solved).length
-              const totalLevels = s.levels?.length || 10
+              const totalLevels = s.levels?.length || 5
               const totalSeconds = (s.levels || []).reduce(
                 (acc, l) => (l.timeTakenSeconds != null ? acc + l.timeTakenSeconds : acc),
                 0,
@@ -213,12 +257,15 @@ export default function LeaderboardPage() {
               const hasAnyTime = (s.levels || []).some((l) => l.timeTakenSeconds != null)
               const isComplete = s.status === 'COMPLETE' || solvedCount === totalLevels
               const isOpen = expanded === s.id
+              const targetId = s.userId || s.id
+              const isDeleting = deletingId === targetId
+              const isRootAdmin = s.email === 'admin@cyberescape.com'
 
               return (
                 <div key={s.id} className="border-b border-[#16405d]/40 last:border-0">
                   {/* Row */}
                   <div
-                    className={`grid min-w-[960px] cursor-pointer grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_140px_2.5rem] items-center px-5 py-3.5 transition-colors ${
+                    className={`grid min-w-[1000px] cursor-pointer grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center px-5 py-3.5 transition-colors ${
                       isOpen ? 'bg-[#0d2a22]/60' : 'hover:bg-[#0d1f30]/70'
                     }`}
                     onClick={() => toggleExpand(s.id)}
@@ -257,6 +304,28 @@ export default function LeaderboardPage() {
                     <span className="font-mono text-[11px] text-[#8baabe]">
                       {formatDate(s.completedAt || s.updatedAt)}
                     </span>
+
+                    {/* Delete action button */}
+                    <div className="flex items-center justify-center">
+                      <button
+                        type="button"
+                        title={isRootAdmin ? 'Root admin cannot be deleted' : `Delete operative ${s.userName || targetId}`}
+                        disabled={isDeleting || isRootAdmin}
+                        onClick={(e) => handleDeleteUser(e, s)}
+                        className={`group/del flex h-7 w-7 items-center justify-center rounded border transition-all ${
+                          isRootAdmin
+                            ? 'cursor-not-allowed border-transparent text-[#355169]/30'
+                            : 'border-red-900/40 bg-red-950/20 text-red-400 hover:border-red-600 hover:bg-red-900/40 hover:text-red-300 hover:shadow-[0_0_8px_#ff4d4f40]'
+                        }`}
+                      >
+                        {isDeleting ? (
+                          <div className="size-3.5 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />
+                        ) : (
+                          <Trash2 className="size-3.5 transition-transform group-hover/del:scale-110" />
+                        )}
+                      </button>
+                    </div>
+
                     <span className="flex justify-center text-[#8baabe]">
                       {isOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                     </span>
@@ -266,7 +335,7 @@ export default function LeaderboardPage() {
                   {isOpen && (
                     <div className="border-t border-[#16405d]/30 bg-[#03101e] px-6 py-4">
                       <div className="mb-2 font-mono text-[9px] tracking-[2px] text-[#35f4d0]">
-                        // QUESTION TIMELINE BREAKDOWN (10 QUESTIONS TOTAL)
+                        // LEVEL TIMELINE BREAKDOWN (5 LEVELS TOTAL)
                       </div>
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                         {(s.levels || []).map((lvl, qIdx) => (

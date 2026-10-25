@@ -26,7 +26,7 @@ export default function PuzzleView({
 
   const activeQ = question || level?.questions?.[questionIndex] || level?.questions?.[0]
   const qNum = questionIndex + 1
-  const totalQ = level?.questions?.length || 2
+  const totalQ = level?.questions?.length || 1
 
   // Reset and focus input field whenever level or question index changes
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function PuzzleView({
           </div>
           <div className="mt-1 flex items-center gap-2 font-mono text-[10px] tracking-[1.5px] text-cyber-muted">
             <span className="rounded bg-[#0e273c] px-2 py-0.5 text-cyber-cyan">
-              QUESTION {qNum} OF {totalQ}
+              {totalQ > 1 ? `QUESTION ${qNum} OF ${totalQ}` : 'SECURITY CHALLENGE'}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="size-3 text-cyber-cyan" />
@@ -68,38 +68,40 @@ export default function PuzzleView({
         />
       </div>
 
-      {/* ── 2-Step Question Progress Pills ── */}
-      <div className="mb-4 grid grid-cols-2 gap-2">
-        {level?.questions?.map((q, idx) => {
-          const isCurrent = idx === questionIndex
-          const isDone = idx < questionIndex
-          let pillStyle = 'border-[#16405d] bg-[#071524] text-cyber-muted'
-          let IconComponent = Lock
+      {/* ── Multi-part Question Progress Pills (only if > 1 question) ── */}
+      {totalQ > 1 && (
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          {level?.questions?.map((q, idx) => {
+            const isCurrent = idx === questionIndex
+            const isDone = idx < questionIndex
+            let pillStyle = 'border-[#16405d] bg-[#071524] text-cyber-muted'
+            let IconComponent = Lock
 
-          if (isDone) {
-            pillStyle = 'border-cyber-green/60 bg-[#092920] text-cyber-green'
-            IconComponent = Check
-          } else if (isCurrent) {
-            pillStyle = 'border-cyber-cyan bg-[#00d9ff14] text-cyber-cyan shadow-[0_0_12px_#00d9ff20]'
-            IconComponent = Sparkles
-          }
+            if (isDone) {
+              pillStyle = 'border-cyber-green/60 bg-[#092920] text-cyber-green'
+              IconComponent = Check
+            } else if (isCurrent) {
+              pillStyle = 'border-cyber-cyan bg-[#00d9ff14] text-cyber-cyan shadow-[0_0_12px_#00d9ff20]'
+              IconComponent = Sparkles
+            }
 
-          return (
-            <div
-              key={q.id || idx}
-              className={`flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-[11px] transition-all ${pillStyle}`}
-            >
-              <IconComponent className="size-3.5 shrink-0" />
-              <div className="min-w-0 flex-1 truncate">
-                <span className="block text-[9px] tracking-[1.5px] opacity-75">
-                  PART {idx + 1}
-                </span>
-                <span className="truncate font-semibold">{q.title}</span>
+            return (
+              <div
+                key={q.id || idx}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-[11px] transition-all ${pillStyle}`}
+              >
+                <IconComponent className="size-3.5 shrink-0" />
+                <div className="min-w-0 flex-1 truncate">
+                  <span className="block text-[9px] tracking-[1.5px] opacity-75">
+                    PART {idx + 1}
+                  </span>
+                  <span className="truncate font-semibold">{q.title}</span>
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* ── Question Box ── */}
       <div
@@ -120,8 +122,10 @@ export default function PuzzleView({
                 <AlertTriangle className="size-3.5 text-red-400" />
                 TIME EXPIRED — MISSION FAILED
               </>
-            ) : (
+            ) : totalQ > 1 ? (
               `ENCRYPTED CHALLENGE [${qNum}/${totalQ}]`
+            ) : (
+              'ENCRYPTED CHALLENGE'
             )}
           </span>
           <span className="font-mono text-[10px] tracking-wider text-cyber-muted">
@@ -131,10 +135,9 @@ export default function PuzzleView({
         <div className={isExpired ? 'opacity-40' : ''}>{activeQ?.question}</div>
       </div>
 
-
       {/* ── Answer Input & Submit Button ── */}
       <label htmlFor="answerInput" className="mb-2 block text-[11px] tracking-[1.5px] text-[#a6cbe2]">
-        OPERATIVE ANSWER [PART {qNum}]
+        {totalQ > 1 ? `OPERATIVE ANSWER [PART ${qNum}]` : 'OPERATIVE ANSWER / DECRYPTION KEY'}
       </label>
       <div className="flex gap-2 max-sm:flex-col">
         <input
@@ -143,7 +146,13 @@ export default function PuzzleView({
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           autoComplete="off"
-          placeholder={isExpired ? 'Time has expired...' : `Enter answer for part ${qNum}...`}
+          placeholder={
+            isExpired
+              ? 'Time has expired...'
+              : totalQ > 1
+                ? `Enter answer for part ${qNum}...`
+                : 'Enter decryption answer...'
+          }
           disabled={isExpired}
           className={`input-cyber ${isExpired ? 'cursor-not-allowed opacity-50' : ''}`}
         />
@@ -154,7 +163,7 @@ export default function PuzzleView({
             isExpired ? 'cursor-not-allowed opacity-40' : ''
           }`}
         >
-          <span>VERIFY PART {qNum}</span>
+          <span>{totalQ > 1 ? `VERIFY PART ${qNum}` : 'SUBMIT ANSWER'}</span>
           <ArrowRight className="size-4" />
         </button>
       </div>

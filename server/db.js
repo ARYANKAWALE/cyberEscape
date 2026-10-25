@@ -62,16 +62,11 @@ try {
 } catch {}
 
 const DEFAULT_QUESTION_TITLES = [
-  'L1.Q1: Difference Sequence',
-  'L1.Q2: Binary Conversion',
-  'L2.Q1: Caesar Shift',
-  'L2.Q2: Atbash Cipher',
-  'L3.Q1: Variable Leap Sequence',
-  'L3.Q2: Vowel Progression',
-  'L4.Q1: Character Frequency Riddle',
-  'L4.Q2: Hardware Security Riddle',
-  'L5.Q1: Reverse Clue Decryption',
-  'L5.Q2: Base64 Escape Keyword',
+  'L1: Difference Sequence',
+  'L2: Caesar Shift',
+  'L3: Variable Leap Sequence',
+  'L4: Character Frequency Riddle',
+  'L5: Reverse Clue Decryption',
 ]
 
 // ── Prepared Statements ───────────────────────────────────────────────────────
@@ -239,27 +234,29 @@ function getSessionByUserId(userId) {
 function getAllSessions() {
   const rows = db
     .prepare(`
-      SELECT
-        s.id AS session_id,
-        COALESCE(s.user_id, u.id) AS user_id,
-        COALESCE(s.user_name, u.name) AS user_name,
-        COALESCE(s.email, u.email) AS email,
-        s.completed_at,
-        COALESCE(s.status, 'INCOMPLETE') AS status,
-        COALESCE(s.updated_at, u.created_at, s.completed_at) AS updated_at
-      FROM users u
-      LEFT JOIN sessions s ON u.id = s.user_id
-      UNION
-      SELECT
-        s.id AS session_id,
-        s.user_id,
-        s.user_name,
-        s.email,
-        s.completed_at,
-        COALESCE(s.status, 'INCOMPLETE') AS status,
-        COALESCE(s.updated_at, s.completed_at) AS updated_at
-      FROM sessions s
-      WHERE s.user_id NOT IN (SELECT id FROM users)
+      SELECT * FROM (
+        SELECT
+          s.id AS session_id,
+          COALESCE(s.user_id, u.id) AS user_id,
+          COALESCE(s.user_name, u.name) AS user_name,
+          COALESCE(s.email, u.email) AS email,
+          s.completed_at,
+          COALESCE(s.status, 'INCOMPLETE') AS status,
+          COALESCE(s.updated_at, u.created_at, s.completed_at) AS updated_at
+        FROM users u
+        LEFT JOIN sessions s ON u.id = s.user_id
+        UNION
+        SELECT
+          s.id AS session_id,
+          s.user_id,
+          s.user_name,
+          s.email,
+          s.completed_at,
+          COALESCE(s.status, 'INCOMPLETE') AS status,
+          COALESCE(s.updated_at, s.completed_at) AS updated_at
+        FROM sessions s
+        WHERE s.user_id NOT IN (SELECT id FROM users)
+      )
       ORDER BY
         CASE WHEN status = 'COMPLETE' THEN 0 ELSE 1 END ASC,
         updated_at DESC
@@ -298,11 +295,26 @@ function getAllSessions() {
   })
 }
 
+/**
+ * Delete a user and all their associated sessions and level results.
+ */
+function deleteUser(userId) {
+  const deleteSessions = db.prepare(`DELETE FROM sessions WHERE user_id = ?`)
+  const deleteUserRow  = db.prepare(`DELETE FROM users   WHERE id       = ?`)
+
+  const run = db.transaction((id) => {
+    deleteSessions.run(id)  // level_results cascade-deleted via FK
+    deleteUserRow.run(id)
+  })
+  run(userId)
+}
+
 module.exports = {
   upsertUser,
   upsertSession,
   getSessionByUserId,
   getAllSessions,
+  deleteUser,
   insertSession: upsertSession, // compatibility alias
   insertLevelResult: () => {},  // compatibility alias
 }

@@ -211,7 +211,7 @@ export function useEscapeRoom(user) {
           const time = timingsRef.current[key]
           const isSolved = time !== undefined
           levelPayload.push({
-            title: `L${lIdx + 1}.Q${qIdx + 1}: ${q.title}`,
+            title: `L${lIdx + 1}: ${q.title}`,
             solved: Boolean(isSolved),
             timeTakenSeconds: time ?? null,
           })
@@ -279,7 +279,7 @@ export function useEscapeRoom(user) {
 
       if (answer !== activeQ.answer.toLowerCase()) {
         setAnswerFeedback({ text: 'INCORRECT ANSWER — inspect the clue and try again.', kind: 'bad' })
-        addLog(`Incorrect answer at Level ${current + 1}.${questionIndex + 1}`)
+        addLog(`Incorrect answer at Level ${current + 1}`)
         return false
       }
 
@@ -290,27 +290,25 @@ export function useEscapeRoom(user) {
       setQuestionTimings((prev) => ({ ...prev, [timingKey]: timeTaken }))
 
       setTimerRunning(false)
-      addLog(`Level ${current + 1}.${questionIndex + 1} solved in ${formatElapsed(timeTaken)}`)
+      addLog(`Level ${current + 1} solved in ${formatElapsed(timeTaken)}`)
 
-      // Check if there is a second question in this level
+      // Check if there is another question in this level
       if (questionIndex < QUESTIONS_PER_LEVEL - 1) {
-        // Sync Question 1 immediately to backend and Excel!
+        // Sync Question immediately to backend and Excel!
         syncProgressToBackend('INCOMPLETE', false, currentUser)
 
-        setAnswerFeedback({ text: 'CORRECT! Question 1 cleared — decrypting Question 2...', kind: 'good' })
+        setAnswerFeedback({ text: 'CORRECT! Question cleared — decrypting next question...', kind: 'good' })
         clearTimeout(timerRef.current)
         timerRef.current = setTimeout(() => {
-          setQuestionIndex(1)
+          setQuestionIndex(questionIndex + 1)
           setAnswerFeedback(NO_FEEDBACK)
-          const limit = levels[current].timeLimit
-          setCountdown(limit)
           setTimerRunning(true)
-          addLog(`Level ${current + 1} Question 2 decrypted; timer reset to ${Math.floor(limit / 60)}m`)
+          addLog(`Level ${current + 1} Question ${questionIndex + 2} decrypted; timer continues (${countdown ?? 0}s remaining)`)
         }, 800)
         return true
       }
 
-      // Both questions in this level cleared!
+      // Level cleared!
       setCleared((prev) => new Set(prev).add(current))
       setAnswerFeedback({ text: 'CORRECT — LEVEL CLEARED!', kind: 'good' })
       addLog(`Level ${current + 1} completely cleared!`)
@@ -318,7 +316,6 @@ export function useEscapeRoom(user) {
       clearTimeout(timerRef.current)
       if (current === TOTAL_LEVELS - 1) {
         // Entire mission completed!
-        // Sync final completion to backend immediately
         syncProgressToBackend('COMPLETE', true, currentUser)
 
         timerRef.current = setTimeout(() => {
@@ -326,14 +323,14 @@ export function useEscapeRoom(user) {
           setView('success')
           setSubmitted(true)
           submittedRef.current = true
-          addLog('MISSION COMPLETE // ALL 10 CHALLENGES BYPASSED')
+          addLog(`MISSION COMPLETE // ALL ${TOTAL_LEVELS} CHALLENGES BYPASSED`)
 
           // Calculate total time
           const allSeconds = Object.values(timingsRef.current).reduce((a, b) => a + (b || 0), 0)
           setElapsed(allSeconds)
         }, 700)
       } else {
-        // Sync Level cleared (Question 2) immediately to backend and Excel!
+        // Sync Level cleared immediately to backend and Excel!
         syncProgressToBackend('INCOMPLETE', false, currentUser)
 
         // Automatically advance to the next level's puzzle without an access code gate
@@ -347,7 +344,7 @@ export function useEscapeRoom(user) {
           const limit = levels[next].timeLimit
           setCountdown(limit)
           setTimerRunning(true)
-          addLog(`Level ${next + 1} unlocked; Question 1 decrypted`)
+          addLog(`Level ${next + 1} unlocked; Challenge decrypted`)
           addLog(`Countdown started: ${Math.floor(limit / 60)}m limit`)
         }, 800)
       }

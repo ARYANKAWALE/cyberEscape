@@ -30,13 +30,13 @@ export default function Header({ status }) {
         </div>
         {user?.isAdmin && (
           <Link
-            to="/leaderboard"
-            id="leaderboardNavBtn"
+            to="/admin"
+            id="adminNavBtn"
             className="btn flex items-center gap-1.5 px-2.5 py-2 text-[10px] whitespace-nowrap sm:px-3.5 sm:text-[11px] border-[#168d7a] text-[#35f4d0]"
-            title="View admin leaderboard"
+            title="View admin dashboard"
           >
             <Trophy className="size-3.5 text-[#35f4d0]" />
-            LEADERBOARD
+            ADMIN
           </Link>
         )}
         <button

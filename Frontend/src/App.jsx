@@ -30,7 +30,7 @@ export default function App() {
           <Route path="/" element={<WelcomePage />} />
           <Route path="/mission" element={<MissionPage />} />
         </Route>
-        <Route path="/leaderboard" element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminRoute />}>
           <Route index element={<LeaderboardPage />} />
         </Route>
       </Route>

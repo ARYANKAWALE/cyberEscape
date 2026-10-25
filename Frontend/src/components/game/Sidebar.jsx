@@ -61,7 +61,7 @@ export default function Sidebar({ current, unlocked, cleared, clearedCount, onSe
                   <span>{label}</span>
                   <span>•</span>
                   <Clock className="size-2.5 inline" />
-                  <span>{Math.floor(lvl.timeLimit / 60)}m/Q</span>
+                  <span>{Math.floor(lvl.timeLimit / 60)}m</span>
                 </small>
               </span>
             </button>
@@ -70,9 +70,9 @@ export default function Sidebar({ current, unlocked, cleared, clearedCount, onSe
       </div>
 
       <div className="mt-4 hidden justify-between border-t border-[#16405d] pt-[15px] text-[11px] text-cyber-muted lg:flex">
-        <span>{TOTAL_LEVELS} LEVELS ({TOTAL_QUESTIONS} Qs)</span>
+        <span>{TOTAL_LEVELS} LEVELS ({TOTAL_QUESTIONS} CHALLENGES)</span>
         <span className="text-cyber-mint">
-          {clearedCount * 2} / {TOTAL_QUESTIONS} SOLVED
+          {clearedCount} / {TOTAL_LEVELS} SOLVED
         </span>
       </div>
     </aside>
