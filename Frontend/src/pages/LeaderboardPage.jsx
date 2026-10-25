@@ -65,8 +65,15 @@ export default function LeaderboardPage() {
   const [actionError, setActionError] = useState(null)
 
   useEffect(() => {
-    // 1. Sync all registered local accounts to backend so every user ID appears
-    const localUsers = getUsers()
+    // 1. Sync all registered local accounts to backend (excluding admin)
+    const localUsers = getUsers().filter(
+      (u) =>
+        !u.isAdmin &&
+        u.email !== ADMIN_EMAIL &&
+        u.email !== 'admin1@gmail.com' &&
+        u.email !== 'admin@cyberescape.com' &&
+        u.name !== 'Admin',
+    )
     const syncPromise =
       Array.isArray(localUsers) && localUsers.length > 0
         ? syncUsersApi(localUsers.map(({ id, name, email, createdAt }) => ({ id, name, email, createdAt })))
@@ -266,7 +273,6 @@ export default function LeaderboardPage() {
               const isOpen = expanded === s.id
               const targetId = s.userId || s.id
               const isDeleting = deletingId === targetId
-              const isRootAdmin = s.email === ADMIN_EMAIL || s.email === 'admin1@gmail.com' || s.email === 'admin@cyberescape.com'
 
               return (
                 <div key={s.id} className="border-b border-[#16405d]/40 last:border-0">
@@ -316,14 +322,10 @@ export default function LeaderboardPage() {
                     <div className="flex items-center justify-center">
                       <button
                         type="button"
-                        title={isRootAdmin ? 'Root admin cannot be deleted' : `Delete team ${s.userName || targetId}`}
-                        disabled={isDeleting || isRootAdmin}
+                        title={`Delete ${s.userName || targetId}`}
+                        disabled={isDeleting}
                         onClick={(e) => handleDeleteUser(e, s)}
-                        className={`group/del flex h-7 w-7 items-center justify-center rounded border transition-all ${
-                          isRootAdmin
-                            ? 'cursor-not-allowed border-transparent text-[#355169]/30'
-                            : 'border-red-900/40 bg-red-950/20 text-red-400 hover:border-red-600 hover:bg-red-900/40 hover:text-red-300 hover:shadow-[0_0_8px_#ff4d4f40]'
-                        }`}
+                        className="group/del flex h-7 w-7 items-center justify-center rounded border border-red-900/40 bg-red-950/20 text-red-400 transition-all hover:border-red-600 hover:bg-red-900/40 hover:text-red-300 hover:shadow-[0_0_8px_#ff4d4f40]"
                       >
                         {isDeleting ? (
                           <div className="size-3.5 animate-spin rounded-full border-2 border-red-500 border-t-transparent" />

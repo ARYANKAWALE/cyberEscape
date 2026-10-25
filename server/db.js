@@ -110,10 +110,25 @@ function formatSession(s) {
 
 // ── CRUD Methods ─────────────────────────────────────────────────────────────
 
+function isAdminAccount(name, email) {
+  const normEmail = (email || '').toLowerCase().trim()
+  const normName = (name || '').toLowerCase().trim()
+  const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim()
+  return (
+    normEmail === 'admin1@gmail.com' ||
+    normEmail === 'admin@cyberescape.com' ||
+    (adminEmail && normEmail === adminEmail) ||
+    normName === 'admin'
+  )
+}
+
 /**
  * Upsert an operative user account.
  */
 async function upsertUser({ id, name, email, createdAt }) {
+  if (isAdminAccount(name, email)) {
+    return null
+  }
   await connectDB()
   const filter = { userId: id }
   const update = {
@@ -138,6 +153,9 @@ async function getSessionByUserId(userId) {
  * Upsert a session and its level results.
  */
 async function upsertSession({ userId, userName, email, completedAt, status, levels }) {
+  if (isAdminAccount(userName, email)) {
+    return null
+  }
   await connectDB()
   const now = new Date().toISOString()
   const effectiveStatus = status || (levels?.every((l) => l.solved) ? 'COMPLETE' : 'INCOMPLETE')
@@ -180,10 +198,13 @@ async function upsertSession({ userId, userName, email, completedAt, status, lev
  */
 async function getAllSessions() {
   await connectDB()
-  const [users, sessions] = await Promise.all([
+  const [rawUsers, rawSessions] = await Promise.all([
     User.find({}).sort({ createdAt: -1 }).lean(),
     Session.find({}).sort({ updatedAt: -1 }).lean(),
   ])
+
+  const users = rawUsers.filter((u) => !isAdminAccount(u.name, u.email))
+  const sessions = rawSessions.filter((s) => !isAdminAccount(s.userName, s.email))
 
   const sessionMap = new Map()
   for (const s of sessions) {

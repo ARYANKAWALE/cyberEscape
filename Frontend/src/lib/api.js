@@ -60,7 +60,7 @@ export function getExportUrl() {
  * POST /api/users — register/sync a team account to the backend.
  */
 export async function registerUserApi(user) {
-  if (!user || !user.id) return
+  if (!user || !user.id || user.isAdmin || user.email === 'admin1@gmail.com' || user.email === 'admin@cyberescape.com' || user.name === 'Admin') return
   try {
     await fetch(`${BASE}/api/users`, {
       method: 'POST',
@@ -82,11 +82,15 @@ export async function registerUserApi(user) {
  */
 export async function syncUsersApi(users) {
   if (!Array.isArray(users) || users.length === 0) return
+  const filtered = users.filter(
+    (u) => !u.isAdmin && u.email !== 'admin1@gmail.com' && u.email !== 'admin@cyberescape.com' && u.name !== 'Admin'
+  )
+  if (filtered.length === 0) return
   try {
     await fetch(`${BASE}/api/users/sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ users }),
+      body: JSON.stringify({ users: filtered }),
     })
   } catch (err) {
     console.warn('Could not bulk sync users to backend:', err)
