@@ -7,4 +7,7 @@ export default defineConfig({
   // GitHub Pages serves this repo at /cyberEscape/; local `npm run dev` stays at /.
   base: process.env.VITE_BASE || '/',
   plugins: [react(), tailwindcss()],
+  optimizeDeps: {
+    include: ['@vercel/analytics/react', '@vercel/speed-insights/react'],
+  },
 })
