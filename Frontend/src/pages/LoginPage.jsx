@@ -65,10 +65,10 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <FormField
           label="EMAIL"
-          type="email"
+          type="text"
           name="email"
           autoComplete="email"
-          placeholder="operative@domain.com"
+          placeholder="operative@gmail.com"
           value={form.email}
           onChange={update('email')}
           error={errors.email}

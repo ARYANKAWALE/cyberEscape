@@ -1,10 +1,7 @@
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 export const PASSWORD_MIN_LENGTH = 8
 
 export function validateEmail(email) {
-  if (!email.trim()) return 'Email is required.'
-  if (!EMAIL_RE.test(email.trim())) return 'Enter a valid email address.'
+  if (!email || !email.trim()) return 'Email is required.'
   return ''
 }
 

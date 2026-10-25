@@ -83,10 +83,10 @@ export default function RegisterPage() {
 
         <FormField
           label="EMAIL"
-          type="email"
+          type="text"
           name="email"
           autoComplete="email"
-          placeholder="operative@domain.com"
+          placeholder="operative@email"
           value={form.email}
           onChange={update('email')}
           error={errors.email}
