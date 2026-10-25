@@ -11,15 +11,17 @@ function levelStatus({ isCleared, isActive, unlocked, index }) {
 export default function Sidebar({ current, unlocked, cleared, clearedCount, onSelect }) {
   return (
     <aside className="surface h-max p-[18px] lg:sticky lg:top-4">
-      <div className="mb-3.5 mt-[3px] flex items-center justify-between text-[11px] tracking-[2px] text-cyber-muted">
+      <div className="mb-3 mt-[3px] flex items-center justify-between text-[11px] tracking-[2px] text-cyber-muted">
         <span className="flex items-center gap-1.5">
           <Layers className="size-3.5 text-cyber-cyan" />
           SEQUENCE
         </span>
-        <span className="text-[10px] text-cyber-cyan">2 Q/LEVEL</span>
+        <span className="rounded bg-[#07241f] px-2 py-0.5 text-[10px] font-semibold text-cyber-mint">
+          {TOTAL_LEVELS} LEVELS
+        </span>
       </div>
 
-      <div className="grid grid-cols-5 gap-[5px] lg:block">
+      <div className="grid grid-cols-5 gap-1.5 sm:gap-2 lg:block">
         {levels.map((lvl, i) => {
           const isCleared = cleared.has(i)
           const isActive = i === current
@@ -32,32 +34,34 @@ export default function Sidebar({ current, unlocked, cleared, clearedCount, onSe
               onClick={() => onSelect(i)}
               aria-current={isActive ? 'step' : undefined}
               className={[
-                'my-1 w-full cursor-pointer rounded-[9px] border px-1 py-[9px] text-center text-cyber-muted transition',
-                'lg:flex lg:items-center lg:gap-[11px] lg:px-[9px] lg:py-3 lg:text-left',
+                'w-full cursor-pointer rounded-[9px] border px-1 py-2 text-center text-cyber-muted transition-all duration-200 active:scale-95',
+                'lg:my-1 lg:flex lg:items-center lg:gap-[11px] lg:px-2.5 lg:py-2.5 lg:text-left',
                 isActive
-                  ? 'border-cyber-cyan bg-[#00d9ff12] shadow-[0_0_18px_#00d9ff15]'
-                  : 'border-transparent hover:border-[#245577]',
+                  ? 'border-cyber-cyan bg-[#00d9ff18] shadow-[0_0_15px_#00d9ff20]'
+                  : 'border-transparent hover:border-[#245577] hover:bg-[#071d33]/50',
               ].join(' ')}
             >
               <span
                 className={[
-                  'mx-auto mb-1.5 grid h-[30px] w-[30px] place-items-center rounded-lg border font-bold lg:mx-0 lg:mb-0',
+                  'mx-auto mb-1 grid h-7 w-7 place-items-center rounded-lg border font-mono text-xs font-bold transition-all sm:h-8 sm:w-8 lg:mx-0 lg:mb-0',
                   isActive
-                    ? 'border-cyber-cyan bg-cyber-cyan text-[#00111e]'
+                    ? 'border-cyber-cyan bg-cyber-cyan text-[#00111e] shadow-[0_0_10px_#00d9ff60]'
                     : isCleared
-                      ? 'border-cyber-green text-cyber-green'
-                      : 'border-[#245577]',
+                      ? 'border-cyber-green bg-[#0d2a22] text-cyber-green'
+                      : 'border-[#245577] text-cyber-muted',
                 ].join(' ')}
               >
                 {isCleared ? (
-                  <Check className="size-4 stroke-[3]" />
+                  <Check className="size-3.5 stroke-[3]" />
                 ) : (
                   String(i + 1).padStart(2, '0')
                 )}
               </span>
               <span className="block min-w-0">
-                <b className="block text-[11px] text-cyber-text lg:text-[13px]">LEVEL {i + 1}</b>
-                <small className="mt-1 hidden text-[9px] text-cyber-muted md:flex md:items-center md:gap-1 lg:text-[10px]">
+                <b className="block text-[10px] tracking-wider text-cyber-text sm:text-[11px] lg:text-[13px]">
+                  LEVEL {i + 1}
+                </b>
+                <small className="mt-0.5 hidden text-[9px] text-cyber-muted md:flex md:items-center md:gap-1 lg:text-[10px]">
                   <span>{label}</span>
                   <span>•</span>
                   <Clock className="size-2.5 inline" />

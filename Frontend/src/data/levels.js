@@ -148,7 +148,7 @@ export const QUESTIONS_PER_LEVEL = 1
 export const TOTAL_QUESTIONS = TOTAL_LEVELS * QUESTIONS_PER_LEVEL
 
 export const MISSION_BRIEF = [
-  'Enter the access code (0808) to breach the initial security gate.',
+  'Enter the access code  to breach the initial security gate.',
   'Each of the 5 levels contains 1 encrypted security challenge.',
   'Solve the challenge to clear the level and automatically advance.',
   'Each level has a countdown timer: 3 → 4 → 5 → 6 → 8 minutes.',

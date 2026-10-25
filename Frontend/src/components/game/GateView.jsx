@@ -58,7 +58,7 @@ const GateView = forwardRef(function GateView(
           value={code}
           onChange={(e) => setCode(e.target.value)}
           autoComplete="off"
-          placeholder={isExpired ? 'Time has expired...' : 'ENTER ACCESS CODE (0808)'}
+          placeholder={isExpired ? 'Time has expired...' : 'ENTER ACCESS CODE'}
           aria-label="Access code"
           disabled={isExpired}
           className={`input-cyber mb-3 text-center font-mono tracking-[2px] ${

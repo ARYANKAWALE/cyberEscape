@@ -262,7 +262,7 @@ export function useEscapeRoom(user) {
   const start = useCallback(() => {
     if (submitted) return
     setInitialized(true)
-    setGateFeedback({ text: 'Mission initialized. Enter access code 0808.', kind: 'good' })
+    setGateFeedback({ text: 'Mission initialized. Enter access code.', kind: 'good' })
     setCountdown(ACCESS_CODE_TIME_LIMIT)
     setTimerRunning(true)
     addLog('Mission initialized; awaiting Level 1 credentials (5 min timer active)')

@@ -19,9 +19,31 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
-    @apply m-0 min-h-screen overflow-x-hidden font-sans text-cyber-text;
+    @apply m-0 min-h-screen overflow-x-hidden font-sans text-cyber-text antialiased;
     background: radial-gradient(ellipse at 50% -20%, #0b3154 0%, #030914 55%);
+  }
+
+  /* Custom Cyberpunk Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #030b15;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #12476a;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00d9ff88;
   }
 
   /* Grid overlay */
@@ -39,7 +61,7 @@
 @layer components {
   /* Shared glass panel surface used by sidebar, panels and hero */
   .surface {
-    @apply rounded-[14px] border border-cyber-line;
+    @apply rounded-[14px] border border-cyber-line transition-all duration-300;
     background: linear-gradient(145deg, #07182aee, #04101fee);
     box-shadow:
       0 12px 35px #0005,
@@ -47,25 +69,26 @@
   }
 
   .btn {
-    @apply cursor-pointer rounded-lg border border-cyber-cyan bg-[#00bce91a] px-[18px] py-[11px]
-      text-sm font-bold tracking-wider text-cyber-cyan transition duration-200
-      hover:-translate-y-px hover:bg-[#00d9ff2a] hover:shadow-[0_0_20px_#00d9ff25]
+    @apply cursor-pointer rounded-lg border border-cyber-cyan bg-[#00bce91a] px-[16px] py-[10px]
+      text-sm font-bold tracking-wider text-cyber-cyan transition-all duration-200 ease-out
+      hover:-translate-y-0.5 hover:bg-[#00d9ff2a] hover:shadow-[0_0_20px_#00d9ff30]
+      active:translate-y-0 active:scale-[0.98]
       disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none;
   }
 
   .btn-primary {
-    @apply bg-cyber-cyan text-[#00121d] hover:bg-cyber-cyan;
+    @apply bg-cyber-cyan text-[#00121d] hover:bg-cyber-cyan hover:shadow-[0_0_25px_#00d9ff50];
   }
 
   .input-cyber {
-    @apply w-full min-w-0 rounded-lg border border-[#1c6389] bg-[#020b15] px-[14px] py-[13px]
-      text-[15px] text-cyber-text outline-none transition
+    @apply w-full min-w-0 rounded-lg border border-[#1c6389] bg-[#020b15] px-[14px] py-[12px]
+      text-[15px] text-cyber-text outline-none transition-all duration-200
       placeholder:text-cyber-muted/60
-      focus:border-cyber-cyan focus:shadow-[0_0_0_3px_#00d9ff18];
+      focus:border-cyber-cyan focus:shadow-[0_0_0_3px_#00d9ff25];
   }
 
   .pill {
-    @apply rounded-full border border-[#168d7a] px-[9px] py-1.5 text-[10px] tracking-wider text-cyber-mint;
+    @apply rounded-full border border-[#168d7a] px-[9px] py-1 text-[10px] tracking-wider text-cyber-mint transition-colors;
   }
 
   .eyebrow {

@@ -31,7 +31,7 @@ export default function MissionPage() {
         />
 
         <main className="min-w-0">
-          <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-[minmax(0,1fr)_220px] lg:grid-cols-[minmax(0,1fr)_260px]">
+          <div className="grid grid-cols-1 gap-[18px] xl:grid-cols-[minmax(0,1fr)_260px]">
             <GamePanel ref={panelRef} game={game} accessInputRef={accessInputRef} />
 
             <aside className="flex flex-col gap-[18px]">

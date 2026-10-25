@@ -136,40 +136,40 @@ export default function LeaderboardPage() {
       style={{ fontFamily: "'Inter', 'Consolas', sans-serif" }}
     >
       {/* ── Header ── */}
-      <header className="border-b border-[#16405d] bg-[#0a1628]/80 px-6 py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      <header className="border-b border-[#16405d] bg-[#0a1628]/80 px-4 py-3.5 sm:px-6 sm:py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg border border-[#168d7a] bg-[#0d2a22]">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#168d7a] bg-[#0d2a22]">
               <Trophy className="size-5 text-[#35f4d0]" />
             </div>
             <div>
               <div className="font-mono text-[10px] tracking-[3px] text-[#35f4d0]">
                 // CYBER ESCAPE ROOM
               </div>
-              <h1 className="mt-0.5 font-mono text-xl font-bold tracking-[2px] text-white">
+              <h1 className="mt-0.5 font-mono text-lg sm:text-xl font-bold tracking-[2px] text-white">
                 ADMIN LEADERBOARD
               </h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden font-mono text-[11px] text-[#8baabe] sm:block">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <span className="hidden font-mono text-[11px] text-[#8baabe] lg:block">
               {user?.name}
             </span>
             <button
               id="exportExcelBtn"
               onClick={handleExport}
-              className="flex items-center gap-2 rounded-[7px] border border-[#168d7a] bg-[#0d2a22] px-4 py-2 font-mono text-[11px] tracking-[1.5px] text-[#35f4d0] transition-all hover:bg-[#168d7a]/30 hover:shadow-[0_0_12px_#35f4d040]"
+              className="flex flex-1 sm:flex-none items-center justify-center gap-2 rounded-[7px] border border-[#168d7a] bg-[#0d2a22] px-3.5 py-2 font-mono text-[11px] tracking-[1.5px] text-[#35f4d0] transition-all hover:bg-[#168d7a]/30 hover:shadow-[0_0_12px_#35f4d040] active:scale-95"
             >
               <Download className="size-3.5" />
-              EXPORT XLSX
+              <span>EXPORT XLSX</span>
             </button>
             <button
               id="backToGameBtn"
               onClick={() => navigate('/')}
-              className="flex items-center gap-1.5 rounded-[7px] border border-[#16405d] bg-[#0d1f30] px-4 py-2 font-mono text-[11px] tracking-[1.5px] text-[#8baabe] transition hover:border-[#35f4d0]/50 hover:text-[#35f4d0]"
+              className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-[7px] border border-[#16405d] bg-[#0d1f30] px-3.5 py-2 font-mono text-[11px] tracking-[1.5px] text-[#8baabe] transition-all hover:border-[#35f4d0]/50 hover:text-[#35f4d0] active:scale-95"
             >
               <ArrowLeft className="size-3.5" />
-              BACK
+              <span>BACK</span>
             </button>
             <button
               id="logoutBtn"
@@ -177,10 +177,10 @@ export default function LeaderboardPage() {
                 logout()
                 navigate('/login')
               }}
-              className="flex items-center gap-1.5 rounded-[7px] border border-red-900/50 bg-red-950/20 px-4 py-2 font-mono text-[11px] tracking-[1.5px] text-red-400 transition hover:bg-red-900/30"
+              className="flex flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-[7px] border border-red-900/50 bg-red-950/20 px-3.5 py-2 font-mono text-[11px] tracking-[1.5px] text-red-400 transition-all hover:bg-red-900/30 active:scale-95"
             >
               <LogOut className="size-3.5" />
-              LOGOUT
+              <span>LOGOUT</span>
             </button>
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function LeaderboardPage() {
 
       {/* ── Stats strip ── */}
       <div className="border-b border-[#16405d]/50 bg-[#071020]">
-        <div className="mx-auto flex max-w-7xl flex-wrap gap-px">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 divide-x divide-y divide-[#16405d]/40 sm:grid-cols-4 sm:divide-y-0">
           {[
             { label: 'REGISTERED TEAMS', value: sessions.length },
             { label: 'COMPLETED', value: completedCount },
@@ -197,10 +197,10 @@ export default function LeaderboardPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="flex flex-1 flex-col items-center justify-center gap-0.5 px-6 py-4"
+              className="flex flex-col items-center justify-center gap-0.5 px-3 py-3 sm:px-6 sm:py-4"
             >
-              <span className="font-mono text-2xl font-bold text-[#35f4d0]">{stat.value}</span>
-              <span className="font-mono text-[9px] tracking-[2px] text-[#8baabe]">{stat.label}</span>
+              <span className="font-mono text-xl sm:text-2xl font-bold text-[#35f4d0]">{stat.value}</span>
+              <span className="font-mono text-[8px] sm:text-[9px] tracking-[2px] text-[#8baabe] text-center">{stat.label}</span>
             </div>
           ))}
         </div>
@@ -231,7 +231,16 @@ export default function LeaderboardPage() {
         )}
 
         {!loading && !error && sessions.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-[#16405d]">
+          <>
+            <div className="mb-2 flex items-center justify-between text-xs text-[#8baabe]">
+              <span className="font-mono text-[11px] text-[#35f4d0]">
+                {sessions.length} {sessions.length === 1 ? 'TEAM' : 'TEAMS'} RECORDED
+              </span>
+              <span className="font-mono text-[10px] text-cyber-muted md:hidden">
+                ⇄ Swipe to view all columns
+              </span>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-[#16405d] shadow-lg">
             {/* Table header */}
             <div className="grid min-w-[1000px] grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center border-b border-[#16405d] bg-[#0d1f30] px-5 py-3 font-mono text-[10px] tracking-[2px] text-[#35f4d0]">
               <span>#</span>
@@ -367,6 +376,7 @@ export default function LeaderboardPage() {
               )
             })}
           </div>
+          </>
         )}
       </main>
 
