@@ -97,7 +97,7 @@ export default function PuzzleView({
 
       {/* ── Answer Input & Submit Button ── */}
       <label htmlFor="answerInput" className="mb-2 block text-[11px] tracking-[1.5px] text-[#a6cbe2]">
-        OPERATIVE ANSWER / DECRYPTION KEY
+        TEAM ANSWER / DECRYPTION KEY
       </label>
       <div className="flex gap-2 max-sm:flex-col">
         <input

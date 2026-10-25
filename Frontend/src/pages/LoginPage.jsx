@@ -47,11 +47,11 @@ export default function LoginPage() {
   return (
     <AuthLayout
       eyebrow="// AUTHENTICATION GATE"
-      title="OPERATIVE LOGIN"
+      title="TEAM LOGIN"
       subtitle="Sign in to resume your mission. Access is verified locally on this device."
       footer={
         <>
-          New operative?{' '}
+          New team?{' '}
           <Link
             to="/register"
             className="inline-flex items-center gap-1 text-cyber-cyan underline-offset-4 hover:underline"
@@ -68,7 +68,7 @@ export default function LoginPage() {
           type="text"
           name="email"
           autoComplete="email"
-          placeholder="operative@gmail.com"
+          placeholder="team@gmail.com"
           value={form.email}
           onChange={update('email')}
           error={errors.email}

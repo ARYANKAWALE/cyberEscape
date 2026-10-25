@@ -11,7 +11,7 @@ function startLabel({ finished, initialized, submitted }) {
  * participant and hands off to the questions page via `onStart`.
  */
 export default function Hero({ name, finished, initialized, submitted, onStart, onBrief }) {
-  const firstName = name?.trim().split(/\s+/)[0] || 'Operative'
+  const teamName = name?.trim() || 'Team'
 
   return (
     <section className="surface relative flex min-h-[min(520px,70vh)] items-center overflow-hidden p-[clamp(20px,4.5vw,56px)] max-sm:min-h-0 [background:radial-gradient(ellipse_at_85%_20%,#07508070,transparent_45%),linear-gradient(115deg,#06172b,#061124_60%,#062341)]">
@@ -23,7 +23,7 @@ export default function Hero({ name, finished, initialized, submitted, onStart, 
         </div>
 
         <p className="mb-3 text-[clamp(15px,2vw,18px)] leading-relaxed text-cyber-text">
-          Hello, <span className="font-bold text-cyber-mint">{firstName}</span> — welcome, and thank
+          Hello, <span className="font-bold text-cyber-mint">{teamName}</span> — welcome, and thank
           you for joining this CYBER ESCAPE ROOM.
         </p>
 

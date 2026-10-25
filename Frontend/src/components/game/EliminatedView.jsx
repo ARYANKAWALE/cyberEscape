@@ -23,7 +23,7 @@ export default function EliminatedView({ levelNumber, questionNumber = 1, onRetr
         className="my-3 font-mono text-[clamp(28px,4vw,42px)] font-bold tracking-[4px] text-red-500"
         style={{ textShadow: '0 0 30px #ef444480' }}
       >
-        OPERATIVE ELIMINATED
+        TEAM ELIMINATED
       </h3>
 
       <p className="mb-2 leading-relaxed text-[#8baabe]">

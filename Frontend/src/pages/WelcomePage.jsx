@@ -13,7 +13,7 @@ export default function WelcomePage() {
   const navigate = useNavigate()
   const [briefOpen, setBriefOpen] = useState(false)
 
-  // If operative has an active mission or already submitted, redirect to where they left off
+  // If team has an active mission or already submitted, redirect to where they left off
   useEffect(() => {
     if (game.initialized || game.submitted || game.view === 'puzzle' || game.view === 'eliminated') {
       navigate('/mission', { replace: true })

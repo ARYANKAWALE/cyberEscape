@@ -79,8 +79,8 @@ async function buildWorkbook(sessions) {
 
   sheet1.columns = [
     { header: '#',                  key: 'rank',         width: 5  },
-    { header: 'Operative ID',       key: 'userId',       width: 22 },
-    { header: 'Player',             key: 'player',       width: 18 },
+    { header: 'Team ID',            key: 'userId',       width: 22 },
+    { header: 'Team Name',          key: 'player',       width: 18 },
     { header: 'Status',             key: 'status',       width: 14 },
     { header: 'Solved',             key: 'levelsSolved', width: 12 },
     { header: 'Level 1\nKeyboard',  key: 'l1',           width: 15 },
@@ -120,7 +120,7 @@ async function buildWorkbook(sessions) {
     const row = sheet1.addRow({
       rank: i + 1,
       userId: s.userId || '—',
-      player: s.userName || 'Operative',
+      player: s.userName || 'Team',
       status: statusText,
       levelsSolved: `${solvedCount} / ${totalLevels}`,
       l1: formatTime(qTimes[0]),
@@ -162,8 +162,8 @@ async function buildWorkbook(sessions) {
   })
 
   sheet2.columns = [
-    { header: 'Operative ID',       key: 'userId',       width: 22 },
-    { header: 'Player',             key: 'player',       width: 20 },
+    { header: 'Team ID',            key: 'userId',       width: 22 },
+    { header: 'Team Name',          key: 'player',       width: 20 },
     { header: 'Overall Status',     key: 'missionStatus',width: 16 },
     { header: 'Q#',                 key: 'qNum',         width: 8  },
     { header: 'Challenge',          key: 'challenge',    width: 32 },
@@ -188,7 +188,7 @@ async function buildWorkbook(sessions) {
     ;(s.levels || []).forEach((lvl, idx) => {
       const row = sheet2.addRow({
         userId: s.userId || '—',
-        player: s.userName || 'Operative',
+        player: s.userName || 'Team',
         missionStatus,
         qNum: `Q${idx + 1}`,
         challenge: lvl.title,

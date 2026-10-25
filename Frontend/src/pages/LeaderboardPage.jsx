@@ -94,7 +94,7 @@ export default function LeaderboardPage() {
 
     if (
       !window.confirm(
-        `Are you sure you want to permanently delete operative "${displayName}"?\n\nThis will remove their account and all game progress from the database and leaderboard.`,
+        `Are you sure you want to permanently delete team "${displayName}"?\n\nThis will remove their team account and all game progress from the database and leaderboard.`,
       )
     ) {
       return
@@ -116,7 +116,7 @@ export default function LeaderboardPage() {
       )
     } catch (err) {
       console.error('Failed to delete user:', err)
-      setActionError(`Failed to delete operative: ${err.message}`)
+      setActionError(`Failed to delete team: ${err.message}`)
     } finally {
       setDeletingId(null)
     }
@@ -190,7 +190,7 @@ export default function LeaderboardPage() {
       <div className="border-b border-[#16405d]/50 bg-[#071020]">
         <div className="mx-auto flex max-w-7xl flex-wrap gap-px">
           {[
-            { label: 'REGISTERED OPERATIVES', value: sessions.length },
+            { label: 'REGISTERED TEAMS', value: sessions.length },
             { label: 'COMPLETED', value: completedCount },
             { label: 'INCOMPLETE / IN PROGRESS', value: incompleteCount },
             { label: 'QUESTIONS SOLVED', value: totalQuestionsSolved },
@@ -226,7 +226,7 @@ export default function LeaderboardPage() {
 
         {!loading && !error && sessions.length === 0 && (
           <div className="rounded-lg border border-[#16405d] bg-[#0a1628]/60 p-10 text-center font-mono text-[#8baabe]">
-            No operatives registered yet. Accounts will appear here automatically upon registration.
+            No teams registered yet. Accounts will appear here automatically upon registration.
           </div>
         )}
 
@@ -235,8 +235,8 @@ export default function LeaderboardPage() {
             {/* Table header */}
             <div className="grid min-w-[1000px] grid-cols-[2.5rem_minmax(120px,160px)_1.2fr_110px_110px_110px_130px_3rem_2.5rem] items-center border-b border-[#16405d] bg-[#0d1f30] px-5 py-3 font-mono text-[10px] tracking-[2px] text-[#35f4d0]">
               <span>#</span>
-              <span>OPERATIVE ID</span>
-              <span>PLAYER</span>
+              <span>TEAM ID</span>
+              <span>TEAM NAME</span>
               <span>STATUS</span>
               <span>LEVELS</span>
               <span>TOTAL TIME</span>
@@ -277,7 +277,7 @@ export default function LeaderboardPage() {
                     </span>
                     <div className="min-w-0 pr-2">
                       <div className="truncate font-mono text-[13px] font-semibold text-[#35f4d0]">
-                        {s.userName || 'Operative'}
+                        {s.userName || 'Team'}
                       </div>
                       {s.email && (
                         <div className="truncate text-[10px] text-[#5e8ca7]">{s.email}</div>
@@ -307,7 +307,7 @@ export default function LeaderboardPage() {
                     <div className="flex items-center justify-center">
                       <button
                         type="button"
-                        title={isRootAdmin ? 'Root admin cannot be deleted' : `Delete operative ${s.userName || targetId}`}
+                        title={isRootAdmin ? 'Root admin cannot be deleted' : `Delete team ${s.userName || targetId}`}
                         disabled={isDeleting || isRootAdmin}
                         onClick={(e) => handleDeleteUser(e, s)}
                         className={`group/del flex h-7 w-7 items-center justify-center rounded border transition-all ${

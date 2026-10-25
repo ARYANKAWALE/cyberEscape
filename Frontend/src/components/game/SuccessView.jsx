@@ -12,7 +12,7 @@ export default function SuccessView({ finalTime, onReplay, submitted }) {
         ESCAPED THE ROOM
       </h3>
       <p className="leading-relaxed text-cyber-muted">
-        Outstanding performance, operative. Every encrypted puzzle has been cracked and the master lock is disengaged.
+        Outstanding performance, team. Every encrypted puzzle has been cracked and the master lock is disengaged.
       </p>
 
       {/* ── Completion Code Display ── */}
@@ -25,7 +25,7 @@ export default function SuccessView({ finalTime, onReplay, submitted }) {
           Your Code is 0102
         </div>
         <div className="mt-2 font-mono text-[11px] tracking-wider text-[#a4cfc6]">
-          Save or present this code to verify mission completion.
+          Use this code to unlock the Device
         </div>
       </div>
 
@@ -45,7 +45,7 @@ export default function SuccessView({ finalTime, onReplay, submitted }) {
       {submitted ? (
         <div className="inline-flex items-center gap-2 rounded-[8px] border border-cyber-mint/60 bg-[#092920] px-5 py-2.5 font-mono text-[12px] tracking-[1.5px] text-cyber-mint">
           <CheckCircle2 className="size-4 text-cyber-mint" />
-          FINAL SUBMISSION RECORDED // 1 SUBMISSION PER OPERATIVE
+          FINAL SUBMISSION RECORDED // 1 SUBMISSION PER TEAM
         </div>
       ) : (
         <button

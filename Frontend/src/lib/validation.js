@@ -14,8 +14,8 @@ export function validatePassword(password) {
 }
 
 export function validateName(name) {
-  if (!name.trim()) return 'Operative name is required.'
-  if (name.trim().length < 2) return 'Name must be at least 2 characters.'
+  if (!name.trim()) return 'Team name is required.'
+  if (name.trim().length < 2) return 'Team name must be at least 2 characters.'
   return ''
 }
 

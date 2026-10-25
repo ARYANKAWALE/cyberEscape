@@ -33,7 +33,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
         {/* Brand / briefing column */}
         <section className="relative hidden overflow-hidden lg:block">
           <div className="pointer-events-none absolute -right-6 top-6 h-[150px] w-[150px] rotate-45 border border-[#00d9ff4a] shadow-[0_0_0_18px_#00d9ff08,0_0_0_36px_#00d9ff05]" />
-          <div className="eyebrow mb-3">// OPERATIVE CLEARANCE</div>
+          <div className="eyebrow mb-3">// TEAM CLEARANCE</div>
           <h2 className="m-0 mb-4 text-[clamp(32px,4vw,52px)] uppercase leading-[1.07] tracking-[1.2px]">
             Identify yourself.
             <br />
@@ -42,13 +42,13 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
             </span>
           </h2>
           <p className="max-w-[480px] text-sm leading-relaxed text-[#b3d0e4]">
-            Five security gates stand between you and freedom. Register an operative profile or
+            Five security gates stand between you and freedom. Register a team profile or
             sign in to resume your intrusion simulation. Credentials never leave this device.
           </p>
 
           <ul className="mt-8 space-y-3 font-mono text-[11px] leading-relaxed text-[#78f8d9]">
             <li>&gt; Secure channel established</li>
-            <li>&gt; Awaiting operative credentials...</li>
+            <li>&gt; Awaiting team credentials...</li>
             <li className="text-[#5e8ca7]">&gt; No session active</li>
           </ul>
         </section>

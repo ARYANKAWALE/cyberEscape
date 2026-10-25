@@ -34,7 +34,7 @@ function saveCurrentProgress(userId, data) {
 /**
  * Game state hook for CyberEscape Room.
  *
- * Persists user state per operative ID to localStorage so refreshing the page
+ * Persists user state per team ID to localStorage so refreshing the page
  * redirects them to exactly where they left off. Enforces 1 submission per user ID.
  */
 export function useEscapeRoom(user) {
@@ -189,7 +189,7 @@ export function useEscapeRoom(user) {
     setTimerRunning(false)
     setEliminatedInfo({ levelNumber: current + 1, questionNumber: questionIndex + 1 })
     setView('eliminated')
-    addLog(`⚠ TIME EXPIRED at Level ${current + 1}, Question ${questionIndex + 1} — OPERATIVE ELIMINATED`)
+    addLog(`⚠ TIME EXPIRED at Level ${current + 1}, Question ${questionIndex + 1} — TEAM ELIMINATED`)
   }, [countdown, timerRunning, current, questionIndex, addLog])
 
   // Calculate elapsed time on current question
@@ -364,7 +364,7 @@ export function useEscapeRoom(user) {
   /** Reset Mission */
   const reset = useCallback(() => {
     if (submittedRef.current || submitted) {
-      addLog('Cannot restart: Final mission submission has already been recorded for this operative ID.')
+      addLog('Cannot restart: Final mission submission has already been recorded for this team ID.')
       return
     }
     clearTimeout(timerRef.current)

@@ -52,9 +52,9 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout
-      eyebrow="// NEW OPERATIVE ENROLLMENT"
+      eyebrow="// NEW TEAM ENROLLMENT"
       title="REGISTER CLEARANCE"
-      subtitle="Create an operative profile to begin the intrusion simulation."
+      subtitle="Create a team profile to begin the intrusion simulation."
       footer={
         <>
           Already cleared?{' '}
@@ -70,11 +70,11 @@ export default function RegisterPage() {
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <FormField
-          label="OPERATIVE NAME"
+          label="TEAM NAME"
           type="text"
           name="name"
           autoComplete="name"
-          placeholder="e.g. Agent Nova"
+          placeholder="e.g. Team CyberAlpha"
           value={form.name}
           onChange={update('name')}
           error={errors.name}
@@ -86,7 +86,7 @@ export default function RegisterPage() {
           type="text"
           name="email"
           autoComplete="email"
-          placeholder="operative@email"
+          placeholder="team@email.com"
           value={form.email}
           onChange={update('email')}
           error={errors.email}
@@ -130,7 +130,7 @@ export default function RegisterPage() {
           disabled={submitting}
         >
           <UserPlus className="size-4" />
-          <span>{submitting ? 'ENROLLING…' : 'CREATE OPERATIVE'}</span>
+          <span>{submitting ? 'ENROLLING…' : 'CREATE TEAM'}</span>
         </button>
       </form>
     </AuthLayout>

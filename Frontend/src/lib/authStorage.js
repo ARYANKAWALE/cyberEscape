@@ -73,7 +73,7 @@ export async function createUser({ name, email, password }) {
   const normalized = normalizeEmail(email)
 
   if (users.some((u) => u.email === normalized)) {
-    throw new Error('An operative with this email already exists.')
+    throw new Error('A team with this email already exists.')
   }
 
   const salt = randomSalt()

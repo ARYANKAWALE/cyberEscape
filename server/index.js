@@ -102,10 +102,10 @@ app.post('/api/results', async (req, res) => {
   try {
     const existing = await db.getSessionByUserId(userId)
 
-    // If operative has already finalized their single submission, preserve complete status
+    // If team has already finalized their single submission, preserve complete status
     if (existing && existing.status === 'COMPLETE' && status !== 'COMPLETE') {
       return res.status(409).json({
-        error: 'Operative has already completed final submission. Further modifications are locked.',
+        error: 'Team has already completed final submission. Further modifications are locked.',
         sessionId: existing.id,
         status: 'COMPLETE',
       })

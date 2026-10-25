@@ -25,7 +25,7 @@ export default function Header({ status }) {
         <div className="hidden text-right text-xs tracking-[2px] text-cyber-mint sm:block">
           SYSTEM STATUS: <span>{status}</span>
           <small className="mt-1 block text-[10px] text-cyber-muted">
-            OPERATIVE // {user?.name?.toUpperCase()}
+            TEAM // {user?.name?.toUpperCase()}
           </small>
         </div>
         {user?.isAdmin && (

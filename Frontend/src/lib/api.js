@@ -57,7 +57,7 @@ export function getExportUrl() {
 }
 
 /**
- * POST /api/users — register/sync an operative account to the backend.
+ * POST /api/users — register/sync a team account to the backend.
  */
 export async function registerUserApi(user) {
   if (!user || !user.id) return

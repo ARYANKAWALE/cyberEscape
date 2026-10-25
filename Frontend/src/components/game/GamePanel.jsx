@@ -15,7 +15,7 @@ function panelMeta(view, levelNumber) {
     case 'success':
       return { title: 'MISSION COMPLETE', pill: 'ESCAPE SUCCESSFUL' }
     case 'eliminated':
-      return { title: 'OPERATIVE ELIMINATED', pill: 'MISSION FAILED' }
+      return { title: 'TEAM ELIMINATED', pill: 'MISSION FAILED' }
     default:
       return { title: `ACCESS GATE // LEVEL ${levelNumber}`, pill: 'AUTHENTICATION REQUIRED' }
   }
