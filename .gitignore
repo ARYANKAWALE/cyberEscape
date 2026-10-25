@@ -7,3 +7,16 @@ dist-ssr
 .idea
 *.log
 npm-debug.log*
+
+# Environment and sensitive files
+.env
+.env.*
+!.env.example
+
+# Local SQLite databases and generated spreadsheets
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.xlsx
+

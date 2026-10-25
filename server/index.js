@@ -1,19 +1,20 @@
 /**
  * CyberEscape Room – Backend API
- * Stores player results in SQLite and automatically syncs to Excel (.xlsx).
+ * Stores player results in MongoDB and automatically syncs to Excel (.xlsx).
  *
  * Routes:
- *   POST /api/users          – register / sync an operative account
- *   POST /api/users/sync     – bulk sync registered accounts from localStorage
- *   POST /api/results        – update question timings & mission completion status
- *   GET  /api/results        – get all registered accounts and sessions (for admin leaderboard)
+ *   POST /api/users                  – register / sync an operative account
+ *   POST /api/users/sync             – bulk sync registered accounts from localStorage
+ *   POST /api/results                – update question timings & mission completion status
+ *   GET  /api/results                – get all registered accounts and sessions (for admin leaderboard)
  *   GET  /api/results/status/:userId – check if operative already completed final submission
- *   GET  /api/results/export – download full data as .xlsx
+ *   GET  /api/results/export         – download full data as .xlsx
+ *   DELETE /api/users/:userId        – delete operative and game records
  */
 
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
-const path = require('path')
 const db = require('./db.js')
 const { exportToExcel, syncExcelFile } = require('./exporter.js')
 
@@ -31,15 +32,16 @@ app.use(express.json())
  * Registers an operative account so it immediately appears in leaderboard and Excel.
  * Body: { id, name, email, createdAt }
  */
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const { id, name, email, createdAt } = req.body
   if (!id || !name) {
     return res.status(400).json({ error: 'Missing user id or name.' })
   }
 
   try {
-    db.upsertUser({ id, name, email, createdAt })
-    syncExcelFile(db.getAllSessions()).catch((e) =>
+    await db.upsertUser({ id, name, email, createdAt })
+    const sessions = await db.getAllSessions()
+    syncExcelFile(sessions).catch((e) =>
       console.warn('Could not auto-sync Excel on disk:', e),
     )
     res.status(201).json({ success: true })
@@ -51,10 +53,10 @@ app.post('/api/users', (req, res) => {
 
 /**
  * POST /api/users/sync
- * Bulk sync registered users from localStorage into SQLite and Excel.
+ * Bulk sync registered users from localStorage into MongoDB and Excel.
  * Body: { users: [{ id, name, email, createdAt }] }
  */
-app.post('/api/users/sync', (req, res) => {
+app.post('/api/users/sync', async (req, res) => {
   const { users } = req.body
   if (!Array.isArray(users)) {
     return res.status(400).json({ error: 'Expected array of users.' })
@@ -63,10 +65,11 @@ app.post('/api/users/sync', (req, res) => {
   try {
     for (const u of users) {
       if (u && u.id && u.name) {
-        db.upsertUser(u)
+        await db.upsertUser(u)
       }
     }
-    syncExcelFile(db.getAllSessions()).catch((e) =>
+    const sessions = await db.getAllSessions()
+    syncExcelFile(sessions).catch((e) =>
       console.warn('Could not auto-sync Excel on disk:', e),
     )
     res.json({ success: true, count: users.length })
@@ -89,7 +92,7 @@ app.post('/api/users/sync', (req, res) => {
  *   levels: [{ title, solved, timeTakenSeconds }]
  * }
  */
-app.post('/api/results', (req, res) => {
+app.post('/api/results', async (req, res) => {
   const { userId, userName, email, completedAt, status, levels } = req.body
 
   if (!userId || !userName || !Array.isArray(levels)) {
@@ -97,7 +100,7 @@ app.post('/api/results', (req, res) => {
   }
 
   try {
-    const existing = db.getSessionByUserId(userId)
+    const existing = await db.getSessionByUserId(userId)
 
     // If operative has already finalized their single submission, preserve complete status
     if (existing && existing.status === 'COMPLETE' && status !== 'COMPLETE') {
@@ -111,7 +114,7 @@ app.post('/api/results', (req, res) => {
     const effectiveStatus =
       status || (levels.every((l) => l.solved) ? 'COMPLETE' : 'INCOMPLETE')
 
-    const sessionId = db.upsertSession({
+    const sessionId = await db.upsertSession({
       userId,
       userName,
       email,
@@ -121,7 +124,8 @@ app.post('/api/results', (req, res) => {
     })
 
     // Auto-update the Excel file on disk immediately with the latest question breakdown
-    syncExcelFile(db.getAllSessions()).catch((e) =>
+    const sessions = await db.getAllSessions()
+    syncExcelFile(sessions).catch((e) =>
       console.warn('Could not auto-sync Excel on disk:', e),
     )
 
@@ -136,9 +140,9 @@ app.post('/api/results', (req, res) => {
  * GET /api/results/status/:userId
  * Checks if a user has already submitted a final completed session.
  */
-app.get('/api/results/status/:userId', (req, res) => {
+app.get('/api/results/status/:userId', async (req, res) => {
   try {
-    const session = db.getSessionByUserId(req.params.userId)
+    const session = await db.getSessionByUserId(req.params.userId)
     const isSubmitted = Boolean(session && session.status === 'COMPLETE')
     res.json({ submitted: isSubmitted, session: session || null })
   } catch (err) {
@@ -151,13 +155,14 @@ app.get('/api/results/status/:userId', (req, res) => {
  * DELETE /api/users/:userId
  * Permanently removes a user, their session, and all level results.
  */
-app.delete('/api/users/:userId', (req, res) => {
+app.delete('/api/users/:userId', async (req, res) => {
   const { userId } = req.params
   if (!userId) return res.status(400).json({ error: 'Missing userId.' })
 
   try {
-    db.deleteUser(userId)
-    syncExcelFile(db.getAllSessions()).catch((e) =>
+    await db.deleteUser(userId)
+    const sessions = await db.getAllSessions()
+    syncExcelFile(sessions).catch((e) =>
       console.warn('Could not auto-sync Excel after delete:', e),
     )
     res.json({ success: true })
@@ -170,11 +175,11 @@ app.delete('/api/users/:userId', (req, res) => {
 /**
  * GET /api/results
  * Returns all registered accounts and sessions (both COMPLETE and INCOMPLETE)
- * with their full 10-question timing timeline.
+ * with their question timing timeline.
  */
-app.get('/api/results', (_req, res) => {
+app.get('/api/results', async (_req, res) => {
   try {
-    const sessions = db.getAllSessions()
+    const sessions = await db.getAllSessions()
     res.json(sessions)
   } catch (err) {
     console.error('Error fetching results:', err)
@@ -188,7 +193,7 @@ app.get('/api/results', (_req, res) => {
  */
 app.get('/api/results/export', async (_req, res) => {
   try {
-    const sessions = db.getAllSessions()
+    const sessions = await db.getAllSessions()
     const buffer = await exportToExcel(sessions)
 
     const filename = `cyberEscape_results_${new Date().toISOString().slice(0, 10)}.xlsx`
@@ -202,12 +207,15 @@ app.get('/api/results/export', async (_req, res) => {
 })
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`✅  CyberEscape API running at http://localhost:${PORT}`)
-  // Sync Excel file on server launch with current DB state
   try {
-    syncExcelFile(db.getAllSessions()).catch((e) =>
+    await db.connectDB()
+    const sessions = await db.getAllSessions()
+    syncExcelFile(sessions).catch((e) =>
       console.warn('Initial Excel sync warning:', e),
     )
-  } catch {}
+  } catch (err) {
+    console.warn('Startup sync notice:', err.message)
+  }
 })

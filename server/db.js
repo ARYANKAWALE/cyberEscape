@@ -1,320 +1,346 @@
 /**
- * SQLite database layer for CyberEscape results.
- *
- * Schema:
- *   users         – one row per registered operative account
- *   sessions      – one row per operative progress / completed game run
- *   level_results – one row per question per session (10 questions total)
+ * MongoDB database layer for CyberEscape results using Mongoose.
+ * Replaces SQLite with a robust, production-ready cloud MongoDB store.
  */
 
-const Database = require('better-sqlite3')
+const mongoose = require('mongoose')
 const path = require('path')
-
-const DB_PATH = path.join(__dirname, 'cyberEscape.db')
-const db = new Database(DB_PATH)
-
-// Enable WAL mode for better concurrent reads
-db.pragma('journal_mode = WAL')
-
-// ── Schema Setup & Migrations ─────────────────────────────────────────────────
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id         TEXT PRIMARY KEY,
-    name       TEXT NOT NULL,
-    email      TEXT,
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS sessions (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id       TEXT    NOT NULL,
-    user_name     TEXT    NOT NULL,
-    completed_at  TEXT
-  );
-
-  CREATE TABLE IF NOT EXISTS level_results (
-    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id         INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
-    level_title        TEXT    NOT NULL,
-    solved             INTEGER NOT NULL DEFAULT 0,  -- 0 | 1
-    time_taken_seconds INTEGER             -- NULL for unsolved/non-timed
-  );
-`)
-
-// Safely add missing columns to sessions if table already existed
-try {
-  db.exec(`ALTER TABLE sessions ADD COLUMN status TEXT DEFAULT 'INCOMPLETE'`)
-} catch {}
-try {
-  db.exec(`ALTER TABLE sessions ADD COLUMN email TEXT`)
-} catch {}
-try {
-  db.exec(`ALTER TABLE sessions ADD COLUMN updated_at TEXT`)
-} catch {}
-
-// For existing completed records, ensure status is 'COMPLETE'
-try {
-  db.exec(`
-    UPDATE sessions
-    SET status = 'COMPLETE'
-    WHERE (status IS NULL OR status = '' OR status = 'INCOMPLETE') AND completed_at IS NOT NULL
-  `)
-} catch {}
+const fs = require('fs')
 
 const DEFAULT_QUESTION_TITLES = [
-  'L1: Difference Sequence',
-  'L2: Caesar Shift',
-  'L3: Variable Leap Sequence',
-  'L4: Character Frequency Riddle',
-  'L5: Reverse Clue Decryption',
+  'L1: The Encrypted Keyboard',
+  'L2: The Firewall Escape',
+  "L3: The Hacker's Identity",
+  'L4: The Central Server Password',
+  'L5: The Final Locker Breach',
 ]
 
-// ── Prepared Statements ───────────────────────────────────────────────────────
-const stmtInsertUser = db.prepare(`
-  INSERT INTO users (id, name, email, created_at)
-  VALUES (@id, @name, @email, @createdAt)
-  ON CONFLICT(id) DO UPDATE SET
-    name = excluded.name,
-    email = COALESCE(excluded.email, users.email)
-`)
+// ── Mongoose Schemas & Models ────────────────────────────────────────────────
 
-const stmtFindSessionByUserId = db.prepare(`
-  SELECT id, user_id, user_name, email, completed_at, status, updated_at
-  FROM sessions
-  WHERE user_id = ?
-  ORDER BY id DESC
-  LIMIT 1
-`)
+const LevelResultSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    solved: { type: Boolean, default: false },
+    timeTakenSeconds: { type: Number, default: null },
+  },
+  { _id: false },
+)
 
-const stmtInsertSession = db.prepare(`
-  INSERT INTO sessions (user_id, user_name, email, completed_at, status, updated_at)
-  VALUES (@userId, @userName, @email, @completedAt, @status, @updatedAt)
-`)
+const UserSchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true, unique: true, index: true },
+    name: { type: String, required: true },
+    email: { type: String, default: null },
+    createdAt: { type: String, default: () => new Date().toISOString() },
+  },
+  { timestamps: true },
+)
 
-const stmtUpdateSession = db.prepare(`
-  UPDATE sessions
-  SET user_name = @userName,
-      email = COALESCE(@email, email),
-      completed_at = @completedAt,
-      status = @status,
-      updated_at = @updatedAt
-  WHERE id = @sessionId
-`)
+const SessionSchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true, index: true },
+    userName: { type: String, required: true },
+    email: { type: String, default: null },
+    status: { type: String, enum: ['COMPLETE', 'INCOMPLETE'], default: 'INCOMPLETE' },
+    completedAt: { type: String, default: null },
+    updatedAt: { type: String, default: () => new Date().toISOString() },
+    levels: [LevelResultSchema],
+  },
+  { timestamps: true },
+)
 
-const stmtDeleteLevels = db.prepare(`
-  DELETE FROM level_results WHERE session_id = ?
-`)
+const User = mongoose.model('User', UserSchema)
+const Session = mongoose.model('Session', SessionSchema)
 
-const stmtInsertLevel = db.prepare(`
-  INSERT INTO level_results (session_id, level_title, solved, time_taken_seconds)
-  VALUES (@sessionId, @title, @solved, @timeTakenSeconds)
-`)
+// ── Connection ───────────────────────────────────────────────────────────────
 
-const stmtGetLevelsForSession = db.prepare(`
-  SELECT level_title, solved, time_taken_seconds
-  FROM level_results
-  WHERE session_id = ?
-  ORDER BY id
-`)
+let isConnecting = false
 
-// ── Exported Helpers ──────────────────────────────────────────────────────────
+async function connectDB() {
+  if (mongoose.connection.readyState === 1) return mongoose.connection
 
-/**
- * Register or update a user and ensure they have an initialized session row.
- */
-function upsertUser({ id, name, email, createdAt }) {
-  const now = createdAt || new Date().toISOString()
-  stmtInsertUser.run({ id, name: name.trim(), email: email ? email.trim() : null, createdAt: now })
+  const uri = process.env.MONGODB_URI
+  if (!uri) {
+    console.warn('[MongoDB] No MONGODB_URI provided in .env! Database calls will fail.')
+    return null
+  }
 
-  // Ensure an initial session exists for this user so they appear in leaderboard & Excel
-  const existing = stmtFindSessionByUserId.get(id)
-  if (!existing) {
-    const { lastInsertRowid: sessionId } = stmtInsertSession.run({
-      userId: id,
-      userName: name.trim(),
-      email: email ? email.trim() : null,
-      completedAt: null,
-      status: 'INCOMPLETE',
-      updatedAt: now,
+  if (isConnecting) return
+
+  try {
+    isConnecting = true
+    await mongoose.connect(uri, {
+      dbName: 'cyberescape',
+      serverSelectionTimeoutMS: 10000,
     })
-
-    for (const title of DEFAULT_QUESTION_TITLES) {
-      stmtInsertLevel.run({
-        sessionId,
-        title,
-        solved: 0,
-        timeTakenSeconds: null,
-      })
-    }
+    console.log('[MongoDB] Connected successfully to database: cyberescape')
+    // Attempt automatic migration from SQLite if needed
+    await migrateFromSqlite().catch((e) =>
+      console.warn('[MongoDB] Auto-migration check finished:', e.message),
+    )
+  } catch (err) {
+    console.error('[MongoDB] Connection error:', err.message)
+  } finally {
+    isConnecting = false
   }
 }
 
-/**
- * Insert or update a player session with latest question timings.
- */
-function upsertSession({ userId, userName, email = null, completedAt = null, status = 'INCOMPLETE', levels = [] }) {
-  const now = new Date().toISOString()
-  const existing = stmtFindSessionByUserId.get(userId)
-  let sessionId
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-  // Also ensure user row is kept updated
-  stmtInsertUser.run({
-    id: userId,
-    name: userName.trim(),
-    email: email ? email.trim() : existing?.email || null,
-    createdAt: now,
-  })
-
-  if (existing) {
-    sessionId = existing.id
-    // If already marked COMPLETE, preserve completion timestamp
-    const finalCompletedAt = status === 'COMPLETE' ? (completedAt || existing.completed_at || now) : null
-    stmtUpdateSession.run({
-      sessionId,
-      userName: userName.trim(),
-      email: email ? email.trim() : existing.email,
-      completedAt: finalCompletedAt,
-      status,
-      updatedAt: now,
-    })
-  } else {
-    const res = stmtInsertSession.run({
-      userId,
-      userName: userName.trim(),
-      email: email ? email.trim() : null,
-      completedAt: status === 'COMPLETE' ? (completedAt || now) : null,
-      status,
-      updatedAt: now,
-    })
-    sessionId = res.lastInsertRowid
-  }
-
-  // Replace level results with the latest question breakdown
-  if (Array.isArray(levels) && levels.length > 0) {
-    stmtDeleteLevels.run(sessionId)
-    for (const lvl of levels) {
-      stmtInsertLevel.run({
-        sessionId,
-        title: lvl.title,
-        solved: lvl.solved ? 1 : 0,
-        timeTakenSeconds: lvl.timeTakenSeconds != null ? lvl.timeTakenSeconds : null,
-      })
-    }
-  }
-
-  return sessionId
+function buildDefaultLevels() {
+  return DEFAULT_QUESTION_TITLES.map((title) => ({
+    title,
+    solved: false,
+    timeTakenSeconds: null,
+  }))
 }
 
-/**
- * Find a session for a specific user ID.
- */
-function getSessionByUserId(userId) {
-  const session = stmtFindSessionByUserId.get(userId)
-  if (!session) return null
+function formatSession(s) {
+  let levels = Array.isArray(s.levels) && s.levels.length > 0 ? s.levels : buildDefaultLevels()
+
   return {
-    id: session.id,
-    userId: session.user_id,
-    userName: session.user_name,
-    email: session.email,
-    completedAt: session.completed_at,
-    status: session.status || (session.completed_at ? 'COMPLETE' : 'INCOMPLETE'),
-    updatedAt: session.updated_at || session.completed_at,
-    levels: stmtGetLevelsForSession.all(session.id).map((l) => ({
-      title: l.level_title,
+    id: s._id ? s._id.toString() : s.userId,
+    userId: s.userId,
+    userName: s.userName,
+    email: s.email || null,
+    status: s.status || 'INCOMPLETE',
+    completedAt: s.completedAt || null,
+    updatedAt: s.updatedAt || s.createdAt || null,
+    levels: levels.map((l) => ({
+      title: l.title,
       solved: Boolean(l.solved),
-      timeTakenSeconds: l.time_taken_seconds,
+      timeTakenSeconds: l.timeTakenSeconds != null ? Number(l.timeTakenSeconds) : null,
     })),
   }
 }
 
-/**
- * Return every registered user & session, each enriched with its level results.
- * Shows all registered users even if they have not completed all tasks.
- */
-function getAllSessions() {
-  const rows = db
-    .prepare(`
-      SELECT * FROM (
-        SELECT
-          s.id AS session_id,
-          COALESCE(s.user_id, u.id) AS user_id,
-          COALESCE(s.user_name, u.name) AS user_name,
-          COALESCE(s.email, u.email) AS email,
-          s.completed_at,
-          COALESCE(s.status, 'INCOMPLETE') AS status,
-          COALESCE(s.updated_at, u.created_at, s.completed_at) AS updated_at
-        FROM users u
-        LEFT JOIN sessions s ON u.id = s.user_id
-        UNION
-        SELECT
-          s.id AS session_id,
-          s.user_id,
-          s.user_name,
-          s.email,
-          s.completed_at,
-          COALESCE(s.status, 'INCOMPLETE') AS status,
-          COALESCE(s.updated_at, s.completed_at) AS updated_at
-        FROM sessions s
-        WHERE s.user_id NOT IN (SELECT id FROM users)
-      )
-      ORDER BY
-        CASE WHEN status = 'COMPLETE' THEN 0 ELSE 1 END ASC,
-        updated_at DESC
-    `)
-    .all()
+// ── CRUD Methods ─────────────────────────────────────────────────────────────
 
-  return rows.map((r) => {
-    let levels = []
-    if (r.session_id) {
-      levels = stmtGetLevelsForSession.all(r.session_id).map((l) => ({
+/**
+ * Upsert an operative user account.
+ */
+async function upsertUser({ id, name, email, createdAt }) {
+  await connectDB()
+  const filter = { userId: id }
+  const update = {
+    userId: id,
+    name,
+    email: email || null,
+    createdAt: createdAt || new Date().toISOString(),
+  }
+  return User.findOneAndUpdate(filter, update, { upsert: true, new: true, setDefaultsOnInsert: true })
+}
+
+/**
+ * Get the latest session for a given userId.
+ */
+async function getSessionByUserId(userId) {
+  await connectDB()
+  const doc = await Session.findOne({ userId }).sort({ updatedAt: -1 })
+  return doc ? formatSession(doc) : null
+}
+
+/**
+ * Upsert a session and its level results.
+ */
+async function upsertSession({ userId, userName, email, completedAt, status, levels }) {
+  await connectDB()
+  const now = new Date().toISOString()
+  const effectiveStatus = status || (levels?.every((l) => l.solved) ? 'COMPLETE' : 'INCOMPLETE')
+
+  let session = await Session.findOne({ userId })
+
+  const formattedLevels = (levels || []).map((l) => ({
+    title: l.title,
+    solved: Boolean(l.solved),
+    timeTakenSeconds: l.timeTakenSeconds != null ? Number(l.timeTakenSeconds) : null,
+  }))
+
+  if (session) {
+    session.userName = userName
+    if (email) session.email = email
+    session.status = effectiveStatus
+    if (effectiveStatus === 'COMPLETE') {
+      session.completedAt = completedAt || session.completedAt || now
+    }
+    session.updatedAt = now
+    session.levels = formattedLevels
+    await session.save()
+  } else {
+    session = await Session.create({
+      userId,
+      userName,
+      email: email || null,
+      status: effectiveStatus,
+      completedAt: effectiveStatus === 'COMPLETE' ? (completedAt || now) : null,
+      updatedAt: now,
+      levels: formattedLevels.length > 0 ? formattedLevels : buildDefaultLevels(),
+    })
+  }
+
+  return session._id.toString()
+}
+
+/**
+ * Returns all registered accounts and sessions for the leaderboard and Excel export.
+ */
+async function getAllSessions() {
+  await connectDB()
+  const [users, sessions] = await Promise.all([
+    User.find({}).sort({ createdAt: -1 }).lean(),
+    Session.find({}).sort({ updatedAt: -1 }).lean(),
+  ])
+
+  const sessionMap = new Map()
+  for (const s of sessions) {
+    if (!sessionMap.has(s.userId)) {
+      sessionMap.set(s.userId, s)
+    }
+  }
+
+  const results = []
+  const seenUserIds = new Set()
+
+  // 1. Add all registered users
+  for (const u of users) {
+    seenUserIds.add(u.userId)
+    const s = sessionMap.get(u.userId)
+    if (s) {
+      results.push(formatSession(s))
+    } else {
+      results.push({
+        id: u.userId,
+        userId: u.userId,
+        userName: u.name,
+        email: u.email || null,
+        status: 'INCOMPLETE',
+        completedAt: null,
+        updatedAt: u.createdAt,
+        levels: buildDefaultLevels(),
+      })
+    }
+  }
+
+  // 2. Add sessions that didn't have an explicit user record (e.g. legacy sessions)
+  for (const s of sessions) {
+    if (!seenUserIds.has(s.userId)) {
+      results.push(formatSession(s))
+      seenUserIds.add(s.userId)
+    }
+  }
+
+  // Sort: COMPLETE first, then by updatedAt DESC
+  results.sort((a, b) => {
+    const aComp = a.status === 'COMPLETE' ? 0 : 1
+    const bComp = b.status === 'COMPLETE' ? 0 : 1
+    if (aComp !== bComp) return aComp - bComp
+
+    const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+    const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+    return bTime - aTime
+  })
+
+  return results
+}
+
+/**
+ * Permanently delete a user and all their game sessions.
+ */
+async function deleteUser(userId) {
+  await connectDB()
+  await Promise.all([
+    User.deleteMany({ userId }),
+    Session.deleteMany({ userId }),
+  ])
+}
+
+// ── SQLite → MongoDB One-Time Auto-Migration ─────────────────────────────────
+
+async function migrateFromSqlite() {
+  const sqliteFile = path.join(__dirname, 'cyberEscape.db')
+  if (!fs.existsSync(sqliteFile)) return
+
+  // Check if MongoDB already has users or sessions
+  const existingCount = await Session.countDocuments()
+  if (existingCount > 0) return // already populated
+
+  console.log('[Migration] Migrating existing SQLite database records to MongoDB...')
+  let Database
+  try {
+    Database = require('better-sqlite3')
+  } catch {
+    return
+  }
+
+  const sdb = new Database(sqliteFile)
+
+  try {
+    // 1. Migrate Users
+    const users = sdb.prepare('SELECT * FROM users').all()
+    for (const u of users) {
+      await User.findOneAndUpdate(
+        { userId: u.id },
+        {
+          userId: u.id,
+          name: u.name,
+          email: u.email || null,
+          createdAt: u.created_at,
+        },
+        { upsert: true },
+      )
+    }
+
+    // 2. Migrate Sessions & Level Results
+    const sessions = sdb.prepare('SELECT * FROM sessions').all()
+    const stmtLevels = sdb.prepare(
+      'SELECT level_title, solved, time_taken_seconds FROM level_results WHERE session_id = ? ORDER BY id ASC',
+    )
+
+    for (const s of sessions) {
+      const dbLevels = stmtLevels.all(s.id)
+      const levels = dbLevels.map((l) => ({
         title: l.level_title,
         solved: Boolean(l.solved),
-        timeTakenSeconds: l.time_taken_seconds,
+        timeTakenSeconds: l.time_taken_seconds != null ? Number(l.time_taken_seconds) : null,
       }))
+
+      await Session.findOneAndUpdate(
+        { userId: s.user_id },
+        {
+          userId: s.user_id,
+          userName: s.user_name,
+          email: s.email || null,
+          status: s.status || 'INCOMPLETE',
+          completedAt: s.completed_at || null,
+          updatedAt: s.updated_at || s.completed_at || new Date().toISOString(),
+          levels: levels.length > 0 ? levels : buildDefaultLevels(),
+        },
+        { upsert: true },
+      )
     }
 
-    // If levels are missing or fewer than 10, fill in placeholders so timeline has all 10 slots
-    if (levels.length === 0) {
-      levels = DEFAULT_QUESTION_TITLES.map((title) => ({
-        title,
-        solved: false,
-        timeTakenSeconds: null,
-      }))
-    }
-
-    return {
-      id: r.session_id || r.user_id,
-      userId: r.user_id,
-      userName: r.user_name,
-      email: r.email,
-      status: r.status,
-      completedAt: r.completed_at,
-      updatedAt: r.updated_at,
-      levels,
-    }
-  })
+    console.log(`[Migration] Successfully migrated ${users.length} users and ${sessions.length} sessions to MongoDB!`)
+  } catch (err) {
+    console.error('[Migration] Migration error:', err)
+  } finally {
+    try {
+      sdb.close()
+    } catch {}
+  }
 }
 
-/**
- * Delete a user and all their associated sessions and level results.
- */
-function deleteUser(userId) {
-  const deleteSessions = db.prepare(`DELETE FROM sessions WHERE user_id = ?`)
-  const deleteUserRow  = db.prepare(`DELETE FROM users   WHERE id       = ?`)
-
-  const run = db.transaction((id) => {
-    deleteSessions.run(id)  // level_results cascade-deleted via FK
-    deleteUserRow.run(id)
-  })
-  run(userId)
-}
+// Automatically connect on module load if MONGODB_URI is available
+connectDB().catch(() => {})
 
 module.exports = {
+  connectDB,
   upsertUser,
-  upsertSession,
   getSessionByUserId,
+  upsertSession,
   getAllSessions,
   deleteUser,
-  insertSession: upsertSession, // compatibility alias
-  insertLevelResult: () => {},  // compatibility alias
+  migrateFromSqlite,
+  // Compatibility aliases
+  insertSession: upsertSession,
+  insertLevelResult: () => {},
 }

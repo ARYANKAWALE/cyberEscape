@@ -12,10 +12,10 @@ import { registerUserApi } from './api.js'
 const USERS_KEY = 'cer.users'
 const SESSION_KEY = 'cer.session'
 
-// ── Hardcoded admin credentials ───────────────────────────────────────────────
-export const ADMIN_EMAIL    = 'admin@cyberescape.com'
-export const ADMIN_PASSWORD = 'Admin@1234'
-export const ADMIN_NAME     = 'Admin'
+// ── Admin credentials from environment variables ─────────────────────────────
+export const ADMIN_EMAIL    = import.meta.env.VITE_ADMIN_EMAIL || 'admin@cyberescape.com'
+export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@1234'
+export const ADMIN_NAME     = import.meta.env.VITE_ADMIN_NAME || 'Admin'
 
 
 function readJSON(key, fallback) {

@@ -9,7 +9,7 @@ function panelMeta(view, levelNumber, questionIndex) {
   switch (view) {
     case 'puzzle':
       return {
-        title: `CHALLENGE // LEVEL ${levelNumber} • PART ${questionIndex + 1} OF 2`,
+        title: `CHALLENGE // LEVEL ${levelNumber}`,
         pill: 'CHALLENGE ACTIVE',
       }
     case 'success':

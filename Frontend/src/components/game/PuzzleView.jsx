@@ -58,6 +58,11 @@ export default function PuzzleView({
               <Clock className="size-3 text-cyber-cyan" />
               TIME LIMIT: {Math.floor(level.timeLimit / 60)} MIN
             </span>
+            {level.difficulty && (
+              <span className="rounded border border-[#16405d] bg-[#071524] px-1.5 py-0.5 text-[#35f4d0]">
+                {level.difficulty.toUpperCase()}
+              </span>
+            )}
           </div>
         </div>
 
@@ -105,13 +110,13 @@ export default function PuzzleView({
 
       {/* ── Question Box ── */}
       <div
-        className={`mb-4 rounded-[10px] border p-5 font-mono text-[clamp(17px,2vw,22px)] leading-[1.55] shadow-[inset_0_0_20px_#00bce908] transition-colors ${
+        className={`mb-4 rounded-[10px] border p-5 font-mono text-[clamp(14px,1.35vw,16px)] leading-[1.65] shadow-[inset_0_0_20px_#00bce908] transition-colors ${
           isExpired
             ? 'border-red-700 bg-red-950/20'
             : 'border-[#126b94] bg-[#03101e]'
         }`}
       >
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between border-b border-[#16405d]/40 pb-2">
           <span
             className={`flex items-center gap-1.5 text-[10px] tracking-[2px] ${
               isExpired ? 'text-red-400' : 'text-cyber-mint'
@@ -132,7 +137,9 @@ export default function PuzzleView({
             {activeQ?.title?.toUpperCase()}
           </span>
         </div>
-        <div className={isExpired ? 'opacity-40' : ''}>{activeQ?.question}</div>
+        <div className={`whitespace-pre-wrap text-[#d3e5f2] ${isExpired ? 'opacity-40' : ''}`}>
+          {activeQ?.question}
+        </div>
       </div>
 
       {/* ── Answer Input & Submit Button ── */}

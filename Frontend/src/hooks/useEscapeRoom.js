@@ -275,9 +275,12 @@ export function useEscapeRoom(user) {
     (rawAnswer, currentUser) => {
       if (submitted) return false
       const activeQ = levels[current].questions[questionIndex]
-      const answer = rawAnswer.trim().toLowerCase()
+      const isCorrect =
+        answer === activeQ.answer.toLowerCase() ||
+        (Array.isArray(activeQ.acceptedAnswers) &&
+          activeQ.acceptedAnswers.map((a) => a.toLowerCase()).includes(answer))
 
-      if (answer !== activeQ.answer.toLowerCase()) {
+      if (!isCorrect) {
         setAnswerFeedback({ text: 'INCORRECT ANSWER — inspect the clue and try again.', kind: 'bad' })
         addLog(`Incorrect answer at Level ${current + 1}`)
         return false
