@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import AdminRoute from './components/AdminRoute.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import PublicOnlyRoute from './components/PublicOnlyRoute.jsx'
@@ -19,23 +20,26 @@ function GameShell() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<PublicOnlyRoute />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      </Route>
-
-      <Route element={<ProtectedRoute />}>
-        <Route element={<GameShell />}>
-          <Route path="/" element={<WelcomePage />} />
-          <Route path="/mission" element={<MissionPage />} />
+    <>
+      <Routes>
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Route>
-        <Route path="/admin" element={<AdminRoute />}>
-          <Route index element={<LeaderboardPage />} />
-        </Route>
-      </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<GameShell />}>
+            <Route path="/" element={<WelcomePage />} />
+            <Route path="/mission" element={<MissionPage />} />
+          </Route>
+          <Route path="/admin" element={<AdminRoute />}>
+            <Route index element={<LeaderboardPage />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Analytics />
+    </>
   )
 }
