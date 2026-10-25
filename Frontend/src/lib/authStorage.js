@@ -13,8 +13,8 @@ const USERS_KEY = 'cer.users'
 const SESSION_KEY = 'cer.session'
 
 // ── Admin credentials from environment variables ─────────────────────────────
-export const ADMIN_EMAIL    = import.meta.env.VITE_ADMIN_EMAIL || 'admin@cyberescape.com'
-export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@1234'
+export const ADMIN_EMAIL    = import.meta.env.VITE_ADMIN_EMAIL || 'admin1@gmail.com'
+export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin@321'
 export const ADMIN_NAME     = import.meta.env.VITE_ADMIN_NAME || 'Admin'
 
 
@@ -112,20 +112,28 @@ export function toPublicUser(user) {
 export async function seedAdmin() {
   const users = getUsers()
   const normalized = normalizeEmail(ADMIN_EMAIL)
-  if (users.some((u) => u.email === normalized)) return // already seeded
+  const existingIdx = users.findIndex(
+    (u) => u.isAdmin || u.email === normalized || u.email === 'admin@cyberescape.com',
+  )
 
   const salt = randomSalt()
   const passwordHash = await hashPassword(ADMIN_PASSWORD, salt)
   const adminUser = {
-    id: crypto.randomUUID(),
+    id: existingIdx >= 0 ? users[existingIdx].id : crypto.randomUUID(),
     name: ADMIN_NAME,
     email: normalized,
     salt,
     passwordHash,
-    createdAt: new Date().toISOString(),
+    createdAt: existingIdx >= 0 ? users[existingIdx].createdAt : new Date().toISOString(),
     isAdmin: true,
   }
-  writeJSON(USERS_KEY, [...users, adminUser])
+
+  if (existingIdx >= 0) {
+    users[existingIdx] = adminUser
+    writeJSON(USERS_KEY, users)
+  } else {
+    writeJSON(USERS_KEY, [...users, adminUser])
+  }
 }
 
 export function getSession() {

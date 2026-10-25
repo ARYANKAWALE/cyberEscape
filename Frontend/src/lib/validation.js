@@ -1,4 +1,4 @@
-export const PASSWORD_MIN_LENGTH = 8
+export const PASSWORD_MIN_LENGTH = 6
 
 export function validateEmail(email) {
   if (!email || !email.trim()) return 'Email is required.'

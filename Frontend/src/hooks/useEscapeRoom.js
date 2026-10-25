@@ -304,6 +304,7 @@ export function useEscapeRoom(user) {
   const submit = useCallback(
     (rawAnswer, currentUser) => {
       if (submitted) return false
+      const answer = (rawAnswer || '').trim().toLowerCase()
       const activeQ = levels[current].questions[questionIndex]
       const isCorrect =
         answer === activeQ.answer.toLowerCase() ||
