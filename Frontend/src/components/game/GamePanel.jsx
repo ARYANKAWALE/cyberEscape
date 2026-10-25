@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import { useAuth } from '../../context/AuthContext.jsx'
+import { ACCESS_CODE_TIME_LIMIT } from '../../data/levels.js'
 import EliminatedView from './EliminatedView.jsx'
 import GateView from './GateView.jsx'
 import PuzzleView from './PuzzleView.jsx'
@@ -63,6 +64,9 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
           ref={accessInputRef}
           levelNumber={levelNumber}
           feedback={gateFeedback}
+          countdown={countdown}
+          timeLimit={ACCESS_CODE_TIME_LIMIT}
+          timerRunning={timerRunning}
           onAccess={access}
         />
       )}
@@ -89,6 +93,7 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
         <EliminatedView
           levelNumber={eliminatedInfo?.levelNumber || levelNumber}
           questionNumber={eliminatedInfo?.questionNumber || 1}
+          isGate={eliminatedInfo?.isGate}
           onRetry={reset}
         />
       )}

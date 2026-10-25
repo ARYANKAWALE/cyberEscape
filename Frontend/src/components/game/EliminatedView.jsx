@@ -4,7 +4,7 @@ import { AlertOctagon, RotateCcw, ShieldAlert } from 'lucide-react'
  * Shown when the countdown reaches 0 on any question.
  * Gives the player a dramatic "ELIMINATED" screen with a retry option.
  */
-export default function EliminatedView({ levelNumber, questionNumber = 1, onRetry }) {
+export default function EliminatedView({ levelNumber, questionNumber = 1, isGate = false, onRetry }) {
   return (
     <div className="px-2.5 py-8 text-center">
       {/* Big warning glyph */}
@@ -29,7 +29,7 @@ export default function EliminatedView({ levelNumber, questionNumber = 1, onRetr
       <p className="mb-2 leading-relaxed text-[#8baabe]">
         Time expired on{' '}
         <span className="font-mono font-bold text-red-400">
-          Level {levelNumber}, Question {questionNumber}
+          {isGate ? 'Access Code Gate' : `Level ${levelNumber}, Question ${questionNumber}`}
         </span>
         .
         <br />

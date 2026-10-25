@@ -9,9 +9,11 @@
  *   Level 5: The Final Locker Breach (8 min, Expert)
  */
 
+export const ACCESS_CODE_TIME_LIMIT = 300 // 5 minutes (300 seconds)
+
 export const levels = [
   {
-    code: '0808',
+    code: '0102',
     title: 'The Encrypted Keyboard',
     difficulty: 'Easy',
     timeLimit: 180, // 3 min

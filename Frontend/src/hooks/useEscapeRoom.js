@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { QUESTIONS_PER_LEVEL, TOTAL_LEVELS, TOTAL_QUESTIONS, levels } from '../data/levels.js'
+import {
+  ACCESS_CODE_TIME_LIMIT,
+  QUESTIONS_PER_LEVEL,
+  TOTAL_LEVELS,
+  TOTAL_QUESTIONS,
+  levels,
+} from '../data/levels.js'
 import { checkUserSubmission, saveResult } from '../lib/api.js'
 import { formatElapsed } from '../lib/time.js'
 
@@ -56,20 +62,26 @@ export function useEscapeRoom(user) {
   const [gateFeedback, setGateFeedback] = useState(NO_FEEDBACK)
   const [answerFeedback, setAnswerFeedback] = useState(NO_FEEDBACK)
 
-  // Countdown timer for active question
+  // Countdown timer for active question or access code gate
   const [countdown, setCountdown] = useState(() => {
     if (initialSaved?.submitted) return null
     if (initialSaved?.view === 'eliminated') return 0
-    if (initialSaved?.view === 'puzzle' && initialSaved?.targetTime && initialSaved?.timerRunning) {
+    if (initialSaved?.targetTime && initialSaved?.timerRunning) {
       return Math.max(0, Math.floor((initialSaved.targetTime - Date.now()) / 1000))
+    }
+    if (initialSaved?.view === 'gate' && initialSaved?.initialized) {
+      return initialSaved?.countdown ?? ACCESS_CODE_TIME_LIMIT
     }
     return initialSaved?.countdown ?? null
   })
   const [timerRunning, setTimerRunning] = useState(() => {
     if (initialSaved?.submitted || initialSaved?.view === 'eliminated') return false
-    if (initialSaved?.view === 'puzzle' && initialSaved?.targetTime && initialSaved?.timerRunning) {
+    if (initialSaved?.targetTime && initialSaved?.timerRunning) {
       const rem = Math.floor((initialSaved.targetTime - Date.now()) / 1000)
       return rem > 0
+    }
+    if (initialSaved?.view === 'gate' && initialSaved?.initialized) {
+      return true
     }
     return Boolean(initialSaved?.timerRunning)
   })
@@ -162,11 +174,21 @@ export function useEscapeRoom(user) {
     setQuestionIndex(0)
     setUnlocked(false)
     setView('gate')
-    setCountdown(null)
-    setTimerRunning(false)
+    setCountdown((prev) => (prev !== null && prev > 0 ? prev : ACCESS_CODE_TIME_LIMIT))
+    setTimerRunning(true)
     setGateFeedback(NO_FEEDBACK)
     setAnswerFeedback(NO_FEEDBACK)
   }, [])
+
+  // Auto-start 5 min timer whenever gate view is active
+  useEffect(() => {
+    if (view === 'gate' && !unlocked && !submitted) {
+      if (countdown === null) {
+        setCountdown(ACCESS_CODE_TIME_LIMIT)
+        setTimerRunning(true)
+      }
+    }
+  }, [view, unlocked, submitted, countdown])
 
   // ── Countdown Tick ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -187,10 +209,16 @@ export function useEscapeRoom(user) {
     if (countdown !== 0 || !timerRunning) return
 
     setTimerRunning(false)
-    setEliminatedInfo({ levelNumber: current + 1, questionNumber: questionIndex + 1 })
-    setView('eliminated')
-    addLog(`⚠ TIME EXPIRED at Level ${current + 1}, Question ${questionIndex + 1} — TEAM ELIMINATED`)
-  }, [countdown, timerRunning, current, questionIndex, addLog])
+    if (view === 'gate') {
+      setEliminatedInfo({ levelNumber: 1, questionNumber: 0, isGate: true })
+      setView('eliminated')
+      addLog('⚠ TIME EXPIRED on Access Code — TEAM ELIMINATED')
+    } else {
+      setEliminatedInfo({ levelNumber: current + 1, questionNumber: questionIndex + 1, isGate: false })
+      setView('eliminated')
+      addLog(`⚠ TIME EXPIRED at Level ${current + 1}, Question ${questionIndex + 1} — TEAM ELIMINATED`)
+    }
+  }, [countdown, timerRunning, current, questionIndex, view, addLog])
 
   // Calculate elapsed time on current question
   const elapsedForCurrentQuestion = useCallback(() => {
@@ -235,7 +263,9 @@ export function useEscapeRoom(user) {
     if (submitted) return
     setInitialized(true)
     setGateFeedback({ text: 'Mission initialized. Enter access code 0808.', kind: 'good' })
-    addLog('Mission initialized; awaiting Level 1 credentials')
+    setCountdown(ACCESS_CODE_TIME_LIMIT)
+    setTimerRunning(true)
+    addLog('Mission initialized; awaiting Level 1 credentials (5 min timer active)')
     syncProgressToBackend('INCOMPLETE', false)
   }, [addLog, submitted, syncProgressToBackend])
 
