@@ -4,8 +4,6 @@
  */
 
 const mongoose = require('mongoose')
-const path = require('path')
-const fs = require('fs')
 
 const DEFAULT_QUESTION_TITLES = [
   'L1: The Encrypted Keyboard',
@@ -74,10 +72,6 @@ async function connectDB() {
       serverSelectionTimeoutMS: 10000,
     })
     console.log('[MongoDB] Connected successfully to database: cyberescape')
-    // Attempt automatic migration from SQLite if needed
-    await migrateFromSqlite().catch((e) =>
-      console.warn('[MongoDB] Auto-migration check finished:', e.message),
-    )
   } catch (err) {
     console.error('[MongoDB] Connection error:', err.message)
   } finally {
@@ -254,81 +248,6 @@ async function deleteUser(userId) {
   ])
 }
 
-// ── SQLite → MongoDB One-Time Auto-Migration ─────────────────────────────────
-
-async function migrateFromSqlite() {
-  const sqliteFile = path.join(__dirname, 'cyberEscape.db')
-  if (!fs.existsSync(sqliteFile)) return
-
-  // Check if MongoDB already has users or sessions
-  const existingCount = await Session.countDocuments()
-  if (existingCount > 0) return // already populated
-
-  console.log('[Migration] Migrating existing SQLite database records to MongoDB...')
-  let Database
-  try {
-    Database = require('better-sqlite3')
-  } catch {
-    return
-  }
-
-  const sdb = new Database(sqliteFile)
-
-  try {
-    // 1. Migrate Users
-    const users = sdb.prepare('SELECT * FROM users').all()
-    for (const u of users) {
-      await User.findOneAndUpdate(
-        { userId: u.id },
-        {
-          userId: u.id,
-          name: u.name,
-          email: u.email || null,
-          createdAt: u.created_at,
-        },
-        { upsert: true },
-      )
-    }
-
-    // 2. Migrate Sessions & Level Results
-    const sessions = sdb.prepare('SELECT * FROM sessions').all()
-    const stmtLevels = sdb.prepare(
-      'SELECT level_title, solved, time_taken_seconds FROM level_results WHERE session_id = ? ORDER BY id ASC',
-    )
-
-    for (const s of sessions) {
-      const dbLevels = stmtLevels.all(s.id)
-      const levels = dbLevels.map((l) => ({
-        title: l.level_title,
-        solved: Boolean(l.solved),
-        timeTakenSeconds: l.time_taken_seconds != null ? Number(l.time_taken_seconds) : null,
-      }))
-
-      await Session.findOneAndUpdate(
-        { userId: s.user_id },
-        {
-          userId: s.user_id,
-          userName: s.user_name,
-          email: s.email || null,
-          status: s.status || 'INCOMPLETE',
-          completedAt: s.completed_at || null,
-          updatedAt: s.updated_at || s.completed_at || new Date().toISOString(),
-          levels: levels.length > 0 ? levels : buildDefaultLevels(),
-        },
-        { upsert: true },
-      )
-    }
-
-    console.log(`[Migration] Successfully migrated ${users.length} users and ${sessions.length} sessions to MongoDB!`)
-  } catch (err) {
-    console.error('[Migration] Migration error:', err)
-  } finally {
-    try {
-      sdb.close()
-    } catch {}
-  }
-}
-
 // Automatically connect on module load if MONGODB_URI is available
 connectDB().catch(() => {})
 
@@ -339,8 +258,4 @@ module.exports = {
   upsertSession,
   getAllSessions,
   deleteUser,
-  migrateFromSqlite,
-  // Compatibility aliases
-  insertSession: upsertSession,
-  insertLevelResult: () => {},
 }

@@ -295,22 +295,6 @@ export function useEscapeRoom(user) {
       setTimerRunning(false)
       addLog(`Level ${current + 1} solved in ${formatElapsed(timeTaken)}`)
 
-      // Check if there is another question in this level
-      if (questionIndex < QUESTIONS_PER_LEVEL - 1) {
-        // Sync Question immediately to backend and Excel!
-        syncProgressToBackend('INCOMPLETE', false, currentUser)
-
-        setAnswerFeedback({ text: 'CORRECT! Question cleared — decrypting next question...', kind: 'good' })
-        clearTimeout(timerRef.current)
-        timerRef.current = setTimeout(() => {
-          setQuestionIndex(questionIndex + 1)
-          setAnswerFeedback(NO_FEEDBACK)
-          setTimerRunning(true)
-          addLog(`Level ${current + 1} Question ${questionIndex + 2} decrypted; timer continues (${countdown ?? 0}s remaining)`)
-        }, 800)
-        return true
-      }
-
       // Level cleared!
       setCleared((prev) => new Set(prev).add(current))
       setAnswerFeedback({ text: 'CORRECT — LEVEL CLEARED!', kind: 'good' })

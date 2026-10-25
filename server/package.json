@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "CyberEscape Room backend — SQLite + Excel export",
+  "description": "CyberEscape Room backend — MongoDB + Excel export",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -12,7 +12,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
     "exceljs": "^4.4.0",

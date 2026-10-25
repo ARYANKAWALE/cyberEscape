@@ -5,7 +5,7 @@ import GateView from './GateView.jsx'
 import PuzzleView from './PuzzleView.jsx'
 import SuccessView from './SuccessView.jsx'
 
-function panelMeta(view, levelNumber, questionIndex) {
+function panelMeta(view, levelNumber) {
   switch (view) {
     case 'puzzle':
       return {
@@ -26,7 +26,6 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
   const {
     view,
     current,
-    questionIndex = 0,
     level,
     question,
     gateFeedback,
@@ -41,7 +40,7 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
     reset,
   } = game
   const levelNumber = current + 1
-  const { title, pill } = panelMeta(view, levelNumber, questionIndex)
+  const { title, pill } = panelMeta(view, levelNumber)
 
   // Pill colour variant
   const pillClass =
@@ -70,9 +69,8 @@ const GamePanel = forwardRef(function GamePanel({ game, accessInputRef }, ref) {
 
       {view === 'puzzle' && (
         <PuzzleView
-          key={`${current}_${questionIndex}`}
+          key={current}
           levelIndex={current}
-          questionIndex={questionIndex}
           level={level}
           question={question}
           feedback={answerFeedback}

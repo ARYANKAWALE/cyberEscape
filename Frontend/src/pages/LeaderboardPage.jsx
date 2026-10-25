@@ -4,12 +4,10 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
-  Clock,
   Download,
   LogOut,
   Trash2,
   Trophy,
-  UserCheck,
 } from 'lucide-react'
 import { deleteUserApi, fetchResults, getExportUrl, syncUsersApi } from '../lib/api.js'
 import { getUsers, removeUser } from '../lib/authStorage.js'
