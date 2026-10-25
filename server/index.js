@@ -22,8 +22,18 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({ origin: /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/ })) // any localhost port (Vite dev)
+app.use(cors()) // allow requests from any origin (local or deployed Vercel frontend)
 app.use(express.json())
+
+// Ensure MongoDB is connected for every request (essential for serverless)
+app.use(async (req, _res, next) => {
+  try {
+    await db.connectDB()
+  } catch (err) {
+    console.error('Database connection error:', err.message)
+  }
+  next()
+})
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -207,15 +217,19 @@ app.get('/api/results/export', async (_req, res) => {
 })
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-app.listen(PORT, async () => {
-  console.log(`✅  CyberEscape API running at http://localhost:${PORT}`)
-  try {
-    await db.connectDB()
-    const sessions = await db.getAllSessions()
-    syncExcelFile(sessions).catch((e) =>
-      console.warn('Initial Excel sync warning:', e),
-    )
-  } catch (err) {
-    console.warn('Startup sync notice:', err.message)
-  }
-})
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`✅  CyberEscape API running at http://localhost:${PORT}`)
+    try {
+      await db.connectDB()
+      const sessions = await db.getAllSessions()
+      syncExcelFile(sessions).catch((e) =>
+        console.warn('Initial Excel sync warning:', e),
+      )
+    } catch (err) {
+      console.warn('Startup sync notice:', err.message)
+    }
+  })
+}
+
+module.exports = app

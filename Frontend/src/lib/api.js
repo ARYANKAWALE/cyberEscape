@@ -3,7 +3,7 @@
  * Base URL defaults to http://localhost:3001.
  */
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const BASE = import.meta.env.VITE_API_URL || 'https://server-black-mu-33.vercel.app'
 
 /**
  * POST /api/results — persist a completed game session.
